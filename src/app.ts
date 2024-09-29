@@ -37,7 +37,9 @@ app.notFound((c: Context) => {
 });
 
 import UserRoutes from "./routes/user";
+import FeedRoutes from "./routes/feed";
 
 app.route("/", UserRoutes);
+app.route("/", FeedRoutes);
 
 export default app;
