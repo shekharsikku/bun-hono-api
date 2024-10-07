@@ -1,13 +1,6 @@
 # Api using Hono framework with Bun runtime
 
-**Hono JWT and Cookies based Authentication**
-
-## Tech Stack
-
-- Hono
-- Bun
-- MongoDB
-- TypeScript
+### Hono JWT and Cookies based Authentication
 
 To install dependencies:
 

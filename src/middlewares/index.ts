@@ -1,16 +1,16 @@
 import type { MiddlewareHandler, Context, Next } from "hono";
 import type { UserInterface } from "../interface";
+import type { Types } from "mongoose";
 import { ApiError, ApiResponse } from "../utils";
 import { getCookie, deleteCookie } from "hono/cookie";
+import { verify, decode } from "hono/jwt";
 import {
   generateAccess,
   generateRefresh,
   createAccessData,
   authorizeCookie,
 } from "../helpers";
-import { verify, decode } from "hono/jwt";
 import User from "../models/user";
-import type { Types } from "mongoose";
 
 const authAccess: MiddlewareHandler = async (
   c: Context,
