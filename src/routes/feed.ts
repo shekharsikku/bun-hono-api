@@ -9,7 +9,8 @@ import {
   editComment,
   removeComment,
   getFeedById,
-  getAllFeeds,
+  getFilteredFeeds,
+  getUserFeeds,
 } from "../controllers/feed";
 
 const feed = new Hono().basePath("/api/feed");
@@ -25,7 +26,8 @@ feed.patch("/comment/:fid", authAccess, addComment);
 feed.patch("/comment/:fid/edit/:cid", authAccess, editComment);
 feed.patch("/comment/:fid/remove/:cid", authAccess, removeComment);
 
-feed.get("/get/:fid", getFeedById);
-feed.get("/getall", getAllFeeds);
+feed.get("/get-user-feeds", authAccess, getUserFeeds);
+feed.get("/get-filter-feeds", getFilteredFeeds);
+feed.get("/get-feed/:fid", getFeedById);
 
 export default feed;

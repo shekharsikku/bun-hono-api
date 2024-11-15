@@ -4,20 +4,23 @@ import Feed from "../models/feed";
 
 const newFeed = async (c: Context) => {
   try {
-    const { title, type, content, media } = await c.req.json();
+    const { title, type, content, media, tags, location } = await c.req.json();
+
     const uid = c.req.user?._id;
 
     const feed = await Feed.create({
       title,
       type,
-      content,
-      media,
+      content: type === "content" ? content : undefined,
+      media: type === "media" ? media : undefined,
+      tags,
+      location,
       user: uid,
     });
 
     return ApiResponse(c, 201, "Feed posted successfully!", feed);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
@@ -39,14 +42,14 @@ const editFeed = async (c: Context) => {
 
     if (!updatedFeed) {
       throw new ApiError(
-        404,
+        403,
         "Feed not found or you are not authorized to update this feed!"
       );
     }
 
     return ApiResponse(c, 200, "Feed updated successfully!", updatedFeed);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
@@ -62,14 +65,14 @@ const deleteFeed = async (c: Context) => {
 
     if (!deletedFeed) {
       throw new ApiError(
-        404,
+        403,
         "Feed not found or you are not authorized to delete this feed!"
       );
     }
 
     return ApiResponse(c, 200, "Feed deleted successfully!", deletedFeed);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
@@ -78,71 +81,68 @@ const likeFeed = async (c: Context) => {
     const fid = c.req.param("fid");
     const uid = c.req.user?._id!;
 
-    const updatedFeed = await Feed.findByIdAndUpdate(
-      fid,
-      [
-        {
-          $set: {
-            likes: {
-              $cond: {
-                if: { $in: [uid, "$likes"] },
-                then: { $setDifference: ["$likes", [uid]] },
-                else: { $concatArrays: ["$likes", [uid]] },
-              },
-            },
-          },
-        },
-      ],
-      { new: true }
-    );
+    const feed = await Feed.findById(fid);
 
-    if (!updatedFeed) {
+    if (!feed) {
       throw new ApiError(404, "Feed not found!");
     }
 
-    const action = updatedFeed.likes.includes(uid)
-      ? "Feed liked successfully!"
-      : "Feed unlike successfully!";
+    const existingLike = feed.likes.find(
+      (like) => like.uid.toString() === uid.toString()
+    );
 
-    return ApiResponse(c, 200, action, updatedFeed);
+    if (existingLike) {
+      feed.likes = feed.likes.filter(
+        (like) => like.uid.toString() !== uid.toString()
+      );
+      await feed.save();
+      return ApiResponse(c, 200, "Feed unliked successfully!", feed);
+    } else {
+      feed.likes.push({ uid, time: new Date() });
+      await feed.save();
+      return ApiResponse(c, 200, "Feed liked successfully!", feed);
+    }
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
 const addComment = async (c: Context) => {
   try {
-    const fid = c.req.param("fid");
-    const uid = c.req.user?._id!;
     const { comment } = await c.req.json();
 
-    const commentedFeed = await Feed.findByIdAndUpdate(
+    const fid = c.req.param("fid");
+    const uid = c.req.user?._id!;
+
+    const commented = await Feed.findByIdAndUpdate(
       fid,
       {
         $push: {
           comments: {
             uid: uid,
             text: comment,
+            time: new Date(),
           },
         },
       },
       { new: true }
     );
 
-    if (!commentedFeed) {
+    if (!commented) {
       throw new ApiError(404, "Feed not found!");
     }
 
-    return ApiResponse(c, 200, "Comment added successfully!", commentedFeed);
+    return ApiResponse(c, 200, "Comment added successfully!", commented);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
 const editComment = async (c: Context) => {
   try {
-    const { fid, cid } = c.req.param();
     const { comment } = await c.req.json();
+    const { fid, cid } = c.req.param();
+
     const uid = c.req.user?._id;
 
     const updatedFeed = await Feed.findOneAndUpdate(
@@ -160,20 +160,21 @@ const editComment = async (c: Context) => {
 
     if (!updatedFeed) {
       throw new ApiError(
-        404,
-        "Comment not found or you are not authorized to edit it."
+        403,
+        "Comment not found or you are not authorized to edit it!"
       );
     }
 
     return ApiResponse(c, 200, "Comment edited successfully!", updatedFeed);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
 const removeComment = async (c: Context) => {
   try {
     const { fid, cid } = c.req.param();
+
     const uid = c.req.user?._id;
 
     const updatedFeed = await Feed.findOneAndUpdate(
@@ -189,14 +190,14 @@ const removeComment = async (c: Context) => {
 
     if (!updatedFeed) {
       throw new ApiError(
-        404,
-        "Comment not found or you are not authorized to remove it."
+        403,
+        "Comment not found or you are not authorized to remove it!"
       );
     }
 
     return ApiResponse(c, 200, "Comment removed successfully!", updatedFeed);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
@@ -204,51 +205,59 @@ const getFeedById = async (c: Context) => {
   try {
     const fid = c.req.param("fid");
 
-    const currentFeed = await Feed.findById(fid);
+    const feed = await Feed.findById(fid);
 
-    if (!currentFeed) {
+    if (!feed) {
       throw new ApiError(404, "Feed not found!");
     }
 
-    return ApiResponse(c, 200, "Feed fetched successfully!", currentFeed);
+    return ApiResponse(c, 200, "Feed fetched successfully!", feed);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
-const getAllFeeds = async (c: Context) => {
+const getFilteredFeeds = async (c: Context) => {
   try {
-    const filter = c.req.query("filter");
+    const order = c.req.query("order"); // `order` query parameter can be 'newest' or 'oldest';
 
-    let allFeeds = [];
+    let sortOrder = {};
 
-    if (filter && filter === "newest") {
-      allFeeds = await Feed.find().sort({ createdAt: -1 });
-    } else if (filter && filter === "oldest") {
-      allFeeds = await Feed.find().sort({ createdAt: 1 });
+    if (order === "newest") {
+      sortOrder = { createdAt: -1 };
+    } else if (order === "oldest") {
+      sortOrder = { createdAt: 1 };
     } else {
-      allFeeds = await Feed.find();
+      sortOrder = { createdAt: -1 };
     }
 
-    if (allFeeds.length <= 0) {
-      throw new ApiError(404, "No any feed available!");
+    const feeds = await Feed.find().sort(sortOrder);
+
+    if (feeds.length === 0) {
+      return ApiResponse(c, 404, "No feeds found!");
     }
 
-    return ApiResponse(c, 200, "Feeds fetched successfully!", allFeeds);
+    return ApiResponse(c, 200, "Feeds fetched successfully!", feeds);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(c, error.code || 400, error.message);
   }
 };
 
-// const getFeedByFilter = async (c: Context) => {
-//   try {
-//     const brand = c.req.query("brand");
-//     const category = c.req.query("category");
-//     return ApiResponse(c, 400, "Please, query you filter!");
-//   } catch (error: any) {
-//     return ApiResponse(c, error.code, error.message);
-//   }
-// };
+const getUserFeeds = async (c: Context) => {
+  try {
+    const uid = c.req.user?._id;
+
+    const feeds = await Feed.find({ user: uid }).sort({ createdAt: -1 });
+
+    if (feeds.length === 0) {
+      return ApiResponse(c, 404, "No feeds found for the current user!");
+    }
+
+    return ApiResponse(c, 200, "Feeds retrieved successfully!", feeds);
+  } catch (error: any) {
+    return ApiResponse(c, error.code || 400, error.message);
+  }
+};
 
 export {
   newFeed,
@@ -259,5 +268,6 @@ export {
   editComment,
   removeComment,
   getFeedById,
-  getAllFeeds,
+  getFilteredFeeds,
+  getUserFeeds,
 };

@@ -40,13 +40,21 @@ interface FeedInterface extends Document {
   media?: string;
   tags: string[];
   location?: string;
-  likes: Types.ObjectId[];
+  likes: {
+    _id?: Types.ObjectId;
+    uid: Types.ObjectId; // User who liked
+    time?: Date;
+  }[];
   comments: {
     _id?: Types.ObjectId;
-    uid: Types.ObjectId;
+    uid: Types.ObjectId; // User who commented
     text: string;
     time?: Date;
   }[];
-  mentioned: Types.ObjectId[];
-  user: Types.ObjectId;
+  mentioned: {
+    _id?: Types.ObjectId;
+    uid: Types.ObjectId; // User who is mentioned
+    time?: Date;
+  }[];
+  user: Types.ObjectId; // Feed creator/owner
 }
