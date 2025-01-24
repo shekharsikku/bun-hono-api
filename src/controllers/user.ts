@@ -19,13 +19,14 @@ const registerUser = async (c: Context) => {
   try {
     const { email, password } = await c.req.json();
 
-    const existsEmail = await User.findOne({ email });
+    const [existsEmail, hashedPassword] = await Promise.all([
+      User.findOne({ email }),
+      generateHash(password),
+    ]);
 
     if (existsEmail) {
       throw new ApiError(409, "Email already exists!");
     }
-
-    const hashedPassword = await generateHash(password);
 
     const newUser = await User.create({
       email,
@@ -219,9 +220,11 @@ const deleteTokens = async (c: Context) => {
 const changePassword = async (c: Context) => {
   try {
     const { old_password, new_password } = await c.req.json();
-    const userId = c.req.user?._id;
 
-    const requestUser = await User.findById(userId).select("+password");
+    const [requestUser, hashedPassword] = await Promise.all([
+      User.findById(c.req.user?._id).select("+password"),
+      generateHash(new_password),
+    ]);
 
     if (!requestUser) {
       throw new ApiError(403, "Invalid authorization!");
@@ -239,8 +242,6 @@ const changePassword = async (c: Context) => {
     if (!validatePassword) {
       throw new ApiError(403, "Incorrect old password!");
     }
-
-    const hashedPassword = await generateHash(new_password);
 
     requestUser.password = hashedPassword;
     const updateResult = await requestUser.save();
