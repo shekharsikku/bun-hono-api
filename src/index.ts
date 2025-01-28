@@ -4,7 +4,6 @@ import app from "./app";
 (async () => {
   try {
     const state = await mongodb(Bun.env.MONGODB_URI!);
-
     if (state === 1) {
       const server = Bun.serve({
         port: Bun.env.PORT!,
