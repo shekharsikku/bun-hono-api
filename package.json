@@ -15,8 +15,9 @@
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
-    "hono": "^4.6.12",
-    "mongoose": "^8.8.3",
-    "zod": "^3.23.8"
+    "envalid": "^8.0.0",
+    "hono": "^4.6.19",
+    "mongoose": "^8.9.5",
+    "zod": "^3.24.1"
   }
 }
