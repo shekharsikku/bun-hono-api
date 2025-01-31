@@ -91,7 +91,7 @@ const authRefresh: MiddlewareHandler = async (
     } catch (err: any) {
       if (err.message.includes("expired")) {
         /** Manually Decoding Payload for Extract UserId */
-        const { header, payload } = decode(refreshToken);
+        const { payload } = decode(refreshToken);
 
         /** Getting User Id from Token Payload */
         const userId = payload.uid as Types.ObjectId;
@@ -152,8 +152,7 @@ const authRefresh: MiddlewareHandler = async (
       /** Generate new Access Token and Update Authorize Cookie */
       if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(c, authorizeId!);
-        const accessToken = await generateAccess(c, userInfo);
-        authTokens.access = accessToken;
+        authTokens.access = await generateAccess(c, userInfo);
         authTokens.refresh = newRefreshToken;
       } else {
         throw new ApiError(403, "Invalid refresh request!");
@@ -164,8 +163,7 @@ const authRefresh: MiddlewareHandler = async (
       throw new ApiError(401, "Please, login again to continue!");
     } else {
       /** If Token is Still Valid, Generate new Access Token */
-      const accessToken = await generateAccess(c, userInfo);
-      authTokens.access = accessToken;
+      authTokens.access = await generateAccess(c, userInfo);
     }
 
     /** Setting the Request and Proceeding */

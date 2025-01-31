@@ -40,7 +40,7 @@ const profileSetup = async (c: Context) => {
       return ApiResponse(c, 200, "Please, complete your profile!", userInfo);
     }
 
-    const accessToken = await generateAccess(c, userInfo);
+    await generateAccess(c, userInfo);
 
     return ApiResponse(c, 200, "Profile updated successfully!", userInfo);
   } catch (error: any) {
@@ -71,13 +71,11 @@ const changePassword = async (c: Context) => {
     }
 
     const hashSalt = await genSalt(12);
-    const hashedPassword = await hash(new_password, hashSalt);
-
-    requestUser.password = hashedPassword;
+    requestUser.password = await hash(new_password, hashSalt);
     await requestUser.save({ validateBeforeSave: true });
 
     const userInfo = createUserInfo(requestUser);
-    const accessToken = generateAccess(c, userInfo);
+    await generateAccess(c, userInfo);
 
     return ApiResponse(c, 202, "Password changed successfully!", userInfo);
   } catch (error: any) {

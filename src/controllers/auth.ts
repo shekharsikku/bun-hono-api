@@ -24,9 +24,9 @@ const signUpUser = async (c: Context) => {
     const hashSalt = await genSalt(12);
     const hashedPassword = await hash(password, hashSalt);
 
-    const newUser = await User.create({ email, password: hashedPassword });
+    await User.create({ email, password: hashedPassword });
 
-    return ApiResponse(c, 201, "Signed up successfully!", newUser);
+    return ApiResponse(c, 201, "Signed up successfully!");
   } catch (error: any) {
     return ApiResponse(c, error.code, error.message);
   }
@@ -60,7 +60,7 @@ const signInUser = async (c: Context) => {
     }
 
     const userInfo = createUserInfo(existsUser);
-    const accessToken = await generateAccess(c, userInfo);
+    await generateAccess(c, userInfo);
 
     if (!userInfo.setup) {
       return ApiResponse(c, 202, "Please, complete your profile!", userInfo);
@@ -111,8 +111,7 @@ const signOutUser = async (c: Context) => {
 };
 
 const refreshAuth = async (c: Context) => {
-  const refreshData = { user: c.req.user, token: c.req.token };
-  return ApiResponse(c, 200, "Authentication refreshed!");
+  return ApiResponse(c, 200, "Authentication refreshed!", c.req.user);
 };
 
 export { signUpUser, signInUser, signOutUser, refreshAuth };

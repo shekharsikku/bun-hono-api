@@ -12,7 +12,7 @@ const auth = new Hono();
 
 auth.post("/sign-up", validateSchema(signUpSchema), signUpUser);
 auth.post("/sign-in", validateSchema(signInSchema), signInUser);
-auth.delete("/sign-out", authAccess, signOutUser);
+auth.all("/sign-out", authAccess, signOutUser);
 auth.get("/auth-refresh", authRefresh, refreshAuth);
 
 export default auth;

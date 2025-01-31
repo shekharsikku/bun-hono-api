@@ -40,8 +40,9 @@ app.all("/hello", (c: Context) => {
 app.route("/", routes);
 
 app.onError((e: Error, c: Context) => {
-  console.log(`${e.name}: ${e.message}`);
-  return c.json({ error: e.message }, 500);
+  const message = e.message || "Something Went Wrong!";
+  console.log(`Error: ${message}`);
+  return c.json({ error: message }, 500);
 });
 
 app.notFound((c: Context) => {

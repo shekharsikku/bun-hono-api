@@ -23,14 +23,6 @@ interface TokenInterface {
   refresh?: string;
 }
 
-interface DetailInterface {
-  name?: string;
-  username?: string;
-  gender?: "Male" | "Female";
-  bio?: string;
-  setup?: boolean;
-}
-
 /** feed interface */
 interface FeedInterface extends Document {
   _id?: Types.ObjectId;
