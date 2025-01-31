@@ -1,30 +1,13 @@
 import { Hono } from "hono";
-import { authAccess, authRefresh } from "../middlewares";
+import { authAccess } from "../middlewares";
+import { validateSchema, profileSchema, passwordSchema } from "../utils/schema";
 import {
-  validateSchema,
-  registerSchema,
-  loginSchema,
-  profileSchema,
-  passwordSchema,
-} from "../utils/schema";
-import {
-  registerUser,
-  loginUser,
-  logoutUser,
-  currentUser,
-  refreshAuth,
   profileSetup,
-  deleteTokens,
   changePassword,
+  userInformation,
 } from "../controllers/user";
 
-const user = new Hono().basePath("/api/user");
-
-user.post("/register", validateSchema(registerSchema), registerUser);
-user.post("/login", validateSchema(loginSchema), loginUser);
-
-user.delete("/delete-expired-tokens", deleteTokens);
-user.delete("/logout", authAccess, logoutUser);
+const user = new Hono();
 
 user.patch(
   "/profile-setup",
@@ -39,7 +22,6 @@ user.patch(
   changePassword
 );
 
-user.get("/current-user", authAccess, currentUser);
-user.get("/refresh-auth", authRefresh, refreshAuth);
+user.get("/user-information", authAccess, userInformation);
 
 export default user;

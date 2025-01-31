@@ -13,7 +13,7 @@ import {
   getUserFeeds,
 } from "../controllers/feed";
 
-const feed = new Hono().basePath("/api/feed");
+const feed = new Hono();
 
 feed.post("/new", authAccess, newFeed);
 

@@ -1,23 +1,9 @@
 import type { Context } from "hono";
 import type { UserInterface } from "../interface";
 import { Types } from "mongoose";
-import { genSalt, hash, compare } from "bcryptjs";
 import { setCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
-
-const generateHash = async (password: string): Promise<string> => {
-  const salt = await genSalt(12);
-  const hashed = await hash(password, salt);
-  return hashed;
-};
-
-const compareHash = async (
-  password: string,
-  hashed: string
-): Promise<boolean> => {
-  const checked = await compare(password, hashed);
-  return checked;
-};
+import env from "../utils/env";
 
 const generateIssuedExpired = (seconds: number) => {
   const issuedAt = Math.floor(Date.now() / 1000);
@@ -25,50 +11,54 @@ const generateIssuedExpired = (seconds: number) => {
 };
 
 const generateAccess = async (c: Context, user: UserInterface) => {
-  const accessSecret = Bun.env.ACCESS_SECRET!;
-  const accessExpiry = parseInt(Bun.env.ACCESS_EXPIRY!);
+  const accessExpiry = env.ACCESS_EXPIRY;
   const { iat, exp } = generateIssuedExpired(accessExpiry);
 
-  const accessToken = await sign({ user, iat, exp }, accessSecret, "HS256");
+  const accessToken = await sign(
+    { user, iat, exp },
+    env.ACCESS_SECRET,
+    "HS256"
+  );
 
   setCookie(c, "access", accessToken, {
     maxAge: accessExpiry,
     httpOnly: true,
     sameSite: "Strict",
-    secure: Bun.env.NODE_ENV !== "development",
+    secure: env.isProd,
   });
 
   return accessToken;
 };
 
 const generateRefresh = async (c: Context, uid: Types.ObjectId) => {
-  const refreshSecret = Bun.env.REFRESH_SECRET!;
-  const refreshExpiry = parseInt(Bun.env.REFRESH_EXPIRY!);
+  const refreshExpiry = env.REFRESH_EXPIRY;
   const { iat, exp } = generateIssuedExpired(refreshExpiry);
 
-  const refreshToken = await sign({ uid, iat, exp }, refreshSecret, "HS512");
+  const refreshToken = await sign(
+    { uid, iat, exp },
+    env.REFRESH_SECRET,
+    "HS512"
+  );
 
   setCookie(c, "refresh", refreshToken, {
     maxAge: refreshExpiry * 2,
     httpOnly: true,
     sameSite: "Strict",
-    secure: Bun.env.NODE_ENV !== "development",
+    secure: env.isProd,
   });
 
   return refreshToken;
 };
 
-const authorizeCookie = (c: Context, authorizeId: string) => {
-  const authExpiry = parseInt(Bun.env.REFRESH_EXPIRY!);
+const authorizeCookie = (c: Context, authId: string) => {
+  const authExpiry = env.REFRESH_EXPIRY;
 
-  if (authorizeId) {
-    setCookie(c, "auth_id", authorizeId.toString(), {
-      maxAge: authExpiry * 2,
-      httpOnly: true,
-      sameSite: "Strict",
-      secure: Bun.env.NODE_ENV !== "development",
-    });
-  }
+  setCookie(c, "current", authId, {
+    maxAge: authExpiry * 2,
+    httpOnly: true,
+    sameSite: "Strict",
+    secure: env.isProd,
+  });
 };
 
 const hasEmptyField = (fields: object) => {
@@ -77,60 +67,30 @@ const hasEmptyField = (fields: object) => {
   );
 };
 
-const removeSpaces = (str: string) => {
-  return str.replace(/\s+/g, "");
-};
+const createUserInfo = (user: UserInterface) => {
+  let userInfo = {};
 
-const capitalizeWord = (str: string) => {
-  return str.charAt(0).toUpperCase() + str.slice(1).toLowerCase();
-};
+  if (user.setup) {
+    userInfo = {
+      ...user.toObject(),
+      password: undefined,
+      authentication: undefined,
+    };
+  } else {
+    userInfo = {
+      _id: user._id,
+      email: user.email,
+      setup: user.setup,
+    };
+  }
 
-const capitalizeWords = (str: string) => {
-  return str
-    .split(" ")
-    .map((word) => capitalizeWord(word))
-    .join(" ");
-};
-
-const maskedObjectId = (objectId: Types.ObjectId) => {
-  const idStr = objectId.toString();
-  const maskedId = idStr.slice(0, 4) + "****" + idStr.slice(-4);
-  return maskedId;
-};
-
-const maskedEmail = (email: string) => {
-  const [localPart, domain] = email.split("@");
-  const maskedLocalPart = localPart.slice(0, 4) + "***";
-  return `${maskedLocalPart}@${domain}`;
-};
-
-const maskedDetails = (details: UserInterface) => {
-  const maskId = maskedObjectId(details._id!);
-  const maskEmail = maskedEmail(details.email);
-  return {
-    _id: maskId,
-    email: maskEmail,
-    setup: details.setup!,
-  };
-};
-
-const createAccessData = (user: UserInterface) => {
-  const accessData = {
-    ...user.toObject(),
-    password: undefined,
-    authentication: undefined,
-  };
-  return accessData as UserInterface;
+  return userInfo as UserInterface;
 };
 
 export {
-  generateHash,
-  compareHash,
   generateAccess,
   generateRefresh,
   authorizeCookie,
   hasEmptyField,
-  removeSpaces,
-  maskedDetails,
-  createAccessData,
+  createUserInfo,
 };
