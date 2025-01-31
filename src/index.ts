@@ -1,12 +1,13 @@
 import mongodb from "./mongodb";
+import env from "./utils/env";
 import app from "./app";
 
 (async () => {
   try {
-    const state = await mongodb(Bun.env.MONGODB_URI!);
+    const state = await mongodb(env.MONGODB_URI);
     if (state === 1) {
       const server = Bun.serve({
-        port: Bun.env.PORT!,
+        port: env.PORT,
         fetch: app.fetch,
       });
       console.log("Database connection success!");

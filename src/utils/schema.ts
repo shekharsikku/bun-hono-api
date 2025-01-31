@@ -15,20 +15,30 @@ const validateSchema =
   (schema: ZodSchema) => async (c: Context, next: Next) => {
     try {
       const jsonData = await c.req.json();
-      await schema.parseAsync(jsonData);
+      const parsedData = schema.parse(jsonData);
+      c.set("validData", parsedData);
       await next();
     } catch (error: any) {
       const errors = ValidationError(error);
-      return ApiResponse(c, 400, "Validation error!", null, errors);
+      return ApiResponse(c, 400, "Validation Error!", null, errors);
     }
   };
 
-const registerSchema = z.object({
-  email: z.string().email(),
-  password: z.string().min(6),
+const signUpSchema = z.object({
+  email: z.string().email({ message: "Invalid email address!" }),
+  password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long!" })
+    .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
+      message:
+        "Password must have an uppercase, a lowercase letter, and a number!",
+    })
+    .refine((val) => !/\s/.test(val), {
+      message: "Password cannot contain spaces!",
+    }),
 });
 
-const loginSchema = z
+const signInSchema = z
   .object({
     email: z.string().email().optional(),
     username: z.string().optional(),
@@ -41,20 +51,36 @@ const loginSchema = z
 
 const profileSchema = z.object({
   name: z.string().min(3).max(30),
-  username: z.string().min(3).max(15),
+  username: z
+    .string()
+    .min(3)
+    .max(15)
+    .regex(/^[a-z0-9_-]{3,15}$/, {
+      message:
+        "Only lowercase letters, numbers, hyphens, and underscores are allowed, with no spaces or special characters at the start/end!",
+    }),
   gender: z.enum(["Male", "Female", "Other"]),
   bio: z.string(),
 });
 
 const passwordSchema = z.object({
   old_password: z.string(),
-  new_password: z.string().min(6),
+  new_password: z
+    .string()
+    .min(8, { message: "Password must be at least 8 characters long!" })
+    .regex(/^(?=.*[A-Z])(?=.*[a-z])(?=.*\d).{8,}$/, {
+      message:
+        "Password must have an uppercase, a lowercase letter, and a number!",
+    })
+    .refine((val) => !/\s/.test(val), {
+      message: "Password cannot contain spaces!",
+    }),
 });
 
 export {
   validateSchema,
-  registerSchema,
-  loginSchema,
+  signUpSchema,
+  signInSchema,
   profileSchema,
   passwordSchema,
 };

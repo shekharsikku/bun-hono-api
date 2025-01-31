@@ -11,6 +11,7 @@ import {
   authorizeCookie,
 } from "../helpers";
 import User from "../models/user";
+import env from "../utils/env";
 
 const authAccess: MiddlewareHandler = async (
   c: Context,
@@ -19,7 +20,7 @@ const authAccess: MiddlewareHandler = async (
   try {
     /** Check for Access Token */
     const accessToken = getCookie(c, "access");
-    const accessSecret = Bun.env.ACCESS_SECRET!;
+    const accessSecret = env.ACCESS_SECRET;
 
     if (!accessToken) {
       throw new ApiError(401, "Unauthorized access request!");
@@ -75,7 +76,7 @@ const authRefresh: MiddlewareHandler = async (
   try {
     /** Check for Refresh Token */
     const refreshToken = getCookie(c, "refresh");
-    const refreshSecret = Bun.env.REFRESH_SECRET!;
+    const refreshSecret = env.REFRESH_SECRET;
 
     if (!refreshToken) {
       throw new ApiError(401, "Unauthorized refresh request!");
@@ -103,7 +104,7 @@ const authRefresh: MiddlewareHandler = async (
     }
 
     const userId = decodedPayload.uid as Types.ObjectId;
-    const timeBefore = decodedPayload.exp! - parseInt(Bun.env.ACCESS_EXPIRY!);
+    const timeBefore = decodedPayload.exp! - env.ACCESS_EXPIRY;
     const currentTime = Math.floor(Date.now() / 1000);
 
     /** User Lookup from Database */
@@ -123,7 +124,7 @@ const authRefresh: MiddlewareHandler = async (
     /** Expiration & Refresh Logic of Tokens */
     if (currentTime >= timeBefore && currentTime < decodedPayload.exp!) {
       const newRefreshToken = await generateRefresh(c, userId);
-      const refreshExpiry = parseInt(Bun.env.REFRESH_EXPIRY!);
+      const refreshExpiry = env.REFRESH_EXPIRY;
       const authorizeId = getCookie(c, "auth_id");
 
       /** Update Existing Refresh Token in Database */

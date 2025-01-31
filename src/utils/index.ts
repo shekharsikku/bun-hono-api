@@ -1,11 +1,11 @@
-import type { StatusCode } from "hono/utils/http-status";
+import type { ContentfulStatusCode } from "hono/utils/http-status";
 import type { Context, TypedResponse } from "hono";
 
 class ApiError extends Error {
-  public code: StatusCode;
+  public code: ContentfulStatusCode;
   public message: string;
 
-  constructor(code: StatusCode, message: string, stack: string = "") {
+  constructor(code: ContentfulStatusCode, message: string, stack: string = "") {
     super(message);
     this.code = code;
     this.message = message;
@@ -14,7 +14,7 @@ class ApiError extends Error {
 }
 
 type Response = {
-  code: StatusCode;
+  code?: ContentfulStatusCode;
   success: boolean;
   message: string;
   data?: any;
@@ -23,13 +23,13 @@ type Response = {
 
 const ApiResponse = (
   c: Context,
-  code: StatusCode,
+  code: ContentfulStatusCode,
   message: string,
   data: any = null,
   error: any = null
 ): TypedResponse<Response> => {
-  const success: boolean = code < 400 ? true : false;
-  const response: Response = { code, success, message };
+  const success: boolean = code < 400;
+  const response: Response = { success, message };
 
   if (data) response.data = data;
   if (error) response.error = error;
