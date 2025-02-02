@@ -91,7 +91,7 @@ const signInUser = async (c: Context) => {
 };
 
 const signOutUser = async (c: Context) => {
-  const requestUser = c.req.user!;
+  const requestUser = c.get("requestUser");
   const refreshToken = deleteCookie(c, "refresh");
   const authorizeId = deleteCookie(c, "current");
 
@@ -107,11 +107,12 @@ const signOutUser = async (c: Context) => {
   }
 
   deleteCookie(c, "access");
-  return ApiResponse(c, 200, "Signed out successfully!");
+  return ApiResponse(c, 200, "Signed out successfully!", requestUser);
 };
 
 const refreshAuth = async (c: Context) => {
-  return ApiResponse(c, 200, "Authentication refreshed!", c.req.user);
+  const requestUser = c.get("requestUser");
+  return ApiResponse(c, 200, "Authentication refreshed!", requestUser);
 };
 
 export { signUpUser, signInUser, signOutUser, refreshAuth };

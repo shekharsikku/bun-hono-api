@@ -1,13 +1,14 @@
 import type { Context } from "hono";
 import { genSalt, hash, compare } from "bcryptjs";
 import { ApiError, ApiResponse } from "../utils";
+import { imagekitUpload } from "../utils/imagekit";
 import { generateAccess, hasEmptyField, createUserInfo } from "../helpers";
 import User from "../models/user";
 
 const profileSetup = async (c: Context) => {
   try {
     const { name, username, gender, bio } = c.get("validData");
-    const requestUser = c.req.user;
+    const requestUser = c.get("requestUser");
 
     if (username !== requestUser?.username) {
       const existsUsername = await User.findOne({ username });
@@ -56,7 +57,9 @@ const changePassword = async (c: Context) => {
       throw new ApiError(400, "Please, choose a different password!");
     }
 
-    const requestUser = await User.findById(c.req.user?._id).select(
+    const userId = c.get("requestUser")._id;
+
+    const requestUser = await User.findById(userId).select(
       "+password"
     );
 
@@ -85,13 +88,13 @@ const changePassword = async (c: Context) => {
 
 const userInformation = async (c: Context) => {
   try {
-    const user = c.req.user!;
+    const requestUser = c.get("requestUser");
 
-    let message = user?.setup
+    let message = requestUser?.setup
       ? "User profile information!"
       : "Please, complete your profile!";
 
-    return ApiResponse(c, 200, message, user);
+    return ApiResponse(c, 200, message, requestUser);
   } catch (error: any) {
     return ApiResponse(c, error.code, error.message);
   }
