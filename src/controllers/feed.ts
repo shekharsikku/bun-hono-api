@@ -6,7 +6,7 @@ const newFeed = async (c: Context) => {
   try {
     const { title, type, content, media, tags, location } = await c.req.json();
 
-    const uid = c.req.user?._id;
+    const uid = c.get("requestUser")._id;
 
     const feed = await Feed.create({
       title,
@@ -29,7 +29,7 @@ const editFeed = async (c: Context) => {
     const { title, type, content, media } = await c.req.json();
 
     const fid = c.req.param("fid");
-    const uid = c.req.user?._id!;
+    const uid = c.get("requestUser")._id;
 
     const updatedFeed = await Feed.findOneAndUpdate(
       {
@@ -56,7 +56,7 @@ const editFeed = async (c: Context) => {
 const deleteFeed = async (c: Context) => {
   try {
     const fid = c.req.param("fid");
-    const uid = c.req.user?._id!;
+    const uid = c.get("requestUser")._id;
 
     const deletedFeed = await Feed.findOneAndDelete({
       _id: fid,
@@ -79,7 +79,7 @@ const deleteFeed = async (c: Context) => {
 const likeFeed = async (c: Context) => {
   try {
     const fid = c.req.param("fid");
-    const uid = c.req.user?._id!;
+    const uid = c.get("requestUser")._id;
 
     const feed = await Feed.findById(fid);
 
@@ -112,7 +112,7 @@ const addComment = async (c: Context) => {
     const { comment } = await c.req.json();
 
     const fid = c.req.param("fid");
-    const uid = c.req.user?._id!;
+    const uid = c.get("requestUser")._id;
 
     const commented = await Feed.findByIdAndUpdate(
       fid,
@@ -143,7 +143,7 @@ const editComment = async (c: Context) => {
     const { comment } = await c.req.json();
     const { fid, cid } = c.req.param();
 
-    const uid = c.req.user?._id;
+    const uid = c.get("requestUser")._id;
 
     const updatedFeed = await Feed.findOneAndUpdate(
       {
@@ -175,7 +175,7 @@ const removeComment = async (c: Context) => {
   try {
     const { fid, cid } = c.req.param();
 
-    const uid = c.req.user?._id;
+    const uid = c.get("requestUser")._id;
 
     const updatedFeed = await Feed.findOneAndUpdate(
       {
@@ -245,7 +245,7 @@ const getFilteredFeeds = async (c: Context) => {
 
 const getUserFeeds = async (c: Context) => {
   try {
-    const uid = c.req.user?._id;
+    const uid = c.get("requestUser")._id;
 
     const feeds = await Feed.find({ user: uid }).sort({ createdAt: -1 });
 

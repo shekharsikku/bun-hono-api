@@ -1,4 +1,4 @@
-import "hono";
+import type { HonoRequest } from "hono";
 import { UserInterface, TokenInterface } from "../interface";
 
 declare module "hono" {
