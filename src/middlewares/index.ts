@@ -1,5 +1,4 @@
 import type { MiddlewareHandler, Context, Next } from "hono";
-import type { TokenInterface, UserInterface } from "../interface";
 import type { Types } from "mongoose";
 import { ApiError, ApiResponse } from "../utils";
 import { getCookie, deleteCookie } from "hono/cookie";
@@ -18,7 +17,6 @@ const authAccess: MiddlewareHandler = async (
   next: Next
 ): Promise<any> => {
   try {
-    /** Check for Access Token */
     const accessToken = getCookie(c, "access");
     const accessSecret = env.ACCESS_SECRET;
 
@@ -26,7 +24,6 @@ const authAccess: MiddlewareHandler = async (
       throw new ApiError(401, "Unauthorized access request!");
     }
 
-    /** JWT Verification */
     let decodedPayload;
 
     try {
@@ -35,8 +32,7 @@ const authAccess: MiddlewareHandler = async (
       throw new ApiError(403, "Invalid access request!");
     }
 
-    /** Setting the Request and Proceeding */
-    c.req.user = decodedPayload.user as UserInterface;
+    c.set("requestUser", decodedPayload.user);
     await next();
   } catch (error: any) {
     return ApiResponse(c, error.code, error.message);
@@ -48,25 +44,19 @@ const deleteToken = async (
   userId: Types.ObjectId,
   refreshToken: string
 ) => {
-  /** Extract Refresh Token ObjectId from Cookie */
   const authorizeId = deleteCookie(c, "current");
 
-  /** Query for Remove Expired Refresh Token */
-  const deleteResponse = await User.findOneAndUpdate(
+  await User.updateOne(
     { _id: userId },
     {
       $pull: {
         authentication: { _id: authorizeId, token: refreshToken },
       },
-    },
-    { new: true }
+    }
   );
 
-  /** Clearing Other Cookies if Response */
-  if (deleteResponse) {
-    deleteCookie(c, "access");
-    deleteCookie(c, "refresh");
-  }
+  deleteCookie(c, "access");
+  deleteCookie(c, "refresh");
 };
 
 const authRefresh: MiddlewareHandler = async (
@@ -74,7 +64,6 @@ const authRefresh: MiddlewareHandler = async (
   next: Next
 ): Promise<any> => {
   try {
-    /** Check for Refresh Token */
     const refreshToken = getCookie(c, "refresh");
     const authorizeId = getCookie(c, "current");
     const refreshSecret = env.REFRESH_SECRET;
@@ -83,20 +72,15 @@ const authRefresh: MiddlewareHandler = async (
       throw new ApiError(401, "Unauthorized refresh request!");
     }
 
-    /** JWT Verification */
     let decodedPayload;
 
     try {
       decodedPayload = await verify(refreshToken, refreshSecret, "HS512");
     } catch (err: any) {
       if (err.message.includes("expired")) {
-        /** Manually Decoding Payload for Extract UserId */
         const { payload } = decode(refreshToken);
-
-        /** Getting User Id from Token Payload */
         const userId = payload.uid as Types.ObjectId;
 
-        /** Delete Existing Refresh Token if Expired */
         await deleteToken(c, userId, refreshToken);
         throw new ApiError(401, "Please, login again to continue!");
       } else {
@@ -108,7 +92,6 @@ const authRefresh: MiddlewareHandler = async (
     const timeBefore = decodedPayload.exp! - env.ACCESS_EXPIRY;
     const currentTime = Math.floor(Date.now() / 1000);
 
-    /** User Lookup from Database */
     const requestUser = await User.findOne({
       _id: userId,
       authentication: {
@@ -123,15 +106,12 @@ const authRefresh: MiddlewareHandler = async (
       throw new ApiError(403, "Invalid user request!");
     }
 
-    let authTokens: TokenInterface = {};
     const userInfo = createUserInfo(requestUser);
 
-    /** Expiration & Refresh Logic of Tokens */
     if (currentTime >= timeBefore && currentTime < decodedPayload.exp!) {
       const newRefreshToken = await generateRefresh(c, userId);
       const refreshExpiry = env.REFRESH_EXPIRY;
 
-      /** Update Existing Refresh Token in Database */
       const updatedAuth = await User.updateOne(
         {
           _id: userId,
@@ -149,26 +129,20 @@ const authRefresh: MiddlewareHandler = async (
         }
       );
 
-      /** Generate new Access Token and Update Authorize Cookie */
       if (updatedAuth.modifiedCount > 0) {
         authorizeCookie(c, authorizeId!);
-        authTokens.access = await generateAccess(c, userInfo);
-        authTokens.refresh = newRefreshToken;
+        await generateAccess(c, userInfo);
       } else {
         throw new ApiError(403, "Invalid refresh request!");
       }
     } else if (currentTime >= decodedPayload.exp!) {
-      /** Delete Existing Refresh Token if Expired */
       await deleteToken(c, requestUser._id, refreshToken);
       throw new ApiError(401, "Please, login again to continue!");
     } else {
-      /** If Token is Still Valid, Generate new Access Token */
-      authTokens.access = await generateAccess(c, userInfo);
+      await generateAccess(c, userInfo);
     }
 
-    /** Setting the Request and Proceeding */
-    c.req.user = userInfo;
-    c.req.token = authTokens;
+    c.set("requestUser", userInfo);
     await next();
   } catch (error: any) {
     return ApiResponse(c, error.code, error.message);

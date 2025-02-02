@@ -1,6 +1,10 @@
 import { cleanEnv, str, url, num, port } from "envalid";
 
 const env = cleanEnv(process.env, {
+  IMAGEKIT_PUBLIC_KEY: str(),
+  IMAGEKIT_PRIVATE_KEY: str(),
+  IMAGEKIT_URL_ENDPOINT: url(),
+
   ACCESS_SECRET: str(),
   ACCESS_EXPIRY: num(),
 
