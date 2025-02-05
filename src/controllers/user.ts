@@ -11,7 +11,7 @@ const profileSetup = async (c: Context) => {
     const requestUser = c.get("requestUser");
 
     if (username !== requestUser?.username) {
-      const existsUsername = await User.findOne({ username });
+      const existsUsername = await User.exists({ username });
 
       if (existsUsername) {
         throw new ApiError(409, "Username already exists!");
@@ -97,17 +97,23 @@ const updateImage = async (c: Context) => {
 
 const deleteImage = async (c: Context) => {
   try {
-    const userId = c.get("requestUser")._id;
-    const requestUser = await User.findById(userId);
+    const requestUser = c.get("requestUser");
 
     if (requestUser && requestUser.image !== "") {
       const imageData = JSON.parse(requestUser.image!);
       await imagekitDelete(imageData.fid);
 
-      requestUser.image = "";
-      await requestUser.save({ validateBeforeSave: true });
+      const updatedProfile = await User.findByIdAndUpdate(
+        requestUser?._id,
+        { image: "" },
+        { new: true }
+      );
 
-      const userInfo = createUserInfo(requestUser);
+      if (!updatedProfile) {
+        throw new ApiError(400, "Error while deleting image!");
+      }
+
+      const userInfo = createUserInfo(updatedProfile);
       await generateAccess(c, userInfo);
 
       return ApiResponse(

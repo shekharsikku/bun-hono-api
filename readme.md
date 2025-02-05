@@ -15,6 +15,10 @@ bun install
 Rename, `.env.sample` file to `.env` and define required variables:
 
 ```env
+IMAGEKIT_PUBLIC_KEY=""
+IMAGEKIT_PRIVATE_KEY=""
+IMAGEKIT_URL_ENDPOINT=""
+
 MONGODB_URI=""
 
 ACCESS_SECRET=""
@@ -30,7 +34,7 @@ BODY_LIMIT=""
 NODE_ENV=""
 ```
 
-Note: `BODY_LIMIT` is in kb & `NODE_ENV` should be development or production.
+Note: `BODY_LIMIT` is in MB & `NODE_ENV` should be development or production.
 
 ### **Running the Project**
 
@@ -57,6 +61,7 @@ bun run start
 │   ├── models/     # Mongoose models
 │   ├── middleware/ # Custom middlewares
 │   ├── utils/      # Utility functions
+│   ├── helpers/    # Helper functions
 │
 ├── bun.lockb       # Lockfile
 ├── package.json    # Project metadata
