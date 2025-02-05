@@ -12,7 +12,7 @@ const imagekitUpload = async (imageFile: File) => {
     const fileBuffer = await imageFile.arrayBuffer();
     const fileBase64 = Buffer.from(fileBuffer).toString("base64");
 
-    const uploadResponse = imagekit.upload({
+    const uploadResponse = await imagekit.upload({
       file: fileBase64,
       fileName: imageFile.name,
       folder: "/uploads",
@@ -25,4 +25,14 @@ const imagekitUpload = async (imageFile: File) => {
   }
 };
 
-export { imagekitUpload };
+const imagekitDelete = async (imageId: string) => {
+  try {
+    const deleteResponse = await imagekit.deleteFile(imageId);
+    return deleteResponse;
+  } catch (error: any) {
+    console.log(`Failed to delete image file: ${error.message}`);
+    return null;
+  }
+};
+
+export { imagekitUpload, imagekitDelete };
