@@ -1,6 +1,5 @@
 import { Hono, type Context } from "hono";
 import { cors } from "hono/cors";
-import { csrf } from "hono/csrf";
 import { logger } from "hono/logger";
 import { bodyLimit } from "hono/body-limit";
 import { poweredBy } from "hono/powered-by";
@@ -19,25 +18,26 @@ app.use(
     credentials: true,
   })
 );
-app.use(csrf());
-app.use(logger());
+
 app.use(
   bodyLimit({
     maxSize: env.BODY_LIMIT * 1024 * 1024,
-    onError: (c) => {
+    onError: (c: Context) => {
       return c.json({ error: "Request payload is too large!" }, 413);
     },
   })
 );
+
+app.use(logger());
 app.use(poweredBy());
 app.use(prettyJSON());
 app.use(secureHeaders());
 
-app.all("/hello", (c: Context) => {
+app.get("/hello", (c: Context) => {
   return c.json({ message: "Hello from Hono via Bun!" });
 });
 
-app.route("/", routes);
+app.route("/api", routes);
 
 app.onError((e: Error, c: Context) => {
   const message = e.message || "Something Went Wrong!";
@@ -47,7 +47,7 @@ app.onError((e: Error, c: Context) => {
 
 app.notFound((c: Context) => {
   const message = `Requested url '${c.req.path}' not found on the server!`;
-  return c.json({ notfound: message }, 404);
+  return c.json({ error: message }, 404);
 });
 
 export default app;
