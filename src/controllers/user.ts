@@ -1,7 +1,7 @@
 import type { Context } from "hono";
 import { genSalt, hash, compare } from "bcryptjs";
 import { ApiError, ApiResponse } from "../utils";
-import { imagekitUpload } from "../utils/imagekit";
+import { imagekitUpload, imagekitDelete } from "../utils/imagekit";
 import { generateAccess, hasEmptyField, createUserInfo } from "../helpers";
 import User from "../models/user";
 
@@ -49,6 +49,80 @@ const profileSetup = async (c: Context) => {
   }
 };
 
+const updateImage = async (c: Context) => {
+  try {
+    const requestUser = c.get("requestUser");
+
+    const dataBody = await c.req.parseBody();
+    const imageFile = dataBody.image;
+
+    if (!imageFile || !(imageFile instanceof File)) {
+      throw new ApiError(400, "Invalid image file upload!");
+    }
+
+    const userProfile = await User.findById(requestUser?._id);
+
+    if (userProfile) {
+      if (userProfile.image !== "") {
+        const imageData = JSON.parse(userProfile.image!);
+        await imagekitDelete(imageData.fid);
+      }
+
+      const uploadedImage = await imagekitUpload(imageFile);
+
+      if (uploadedImage && uploadedImage.url) {
+        userProfile.image = JSON.stringify({
+          fid: uploadedImage.fileId,
+          url: uploadedImage.url,
+        });
+        await userProfile.save({ validateBeforeSave: true });
+
+        const userInfo = createUserInfo(userProfile);
+        await generateAccess(c, userInfo);
+
+        return ApiResponse(
+          c,
+          200,
+          "Profile image updated successfully!",
+          userInfo
+        );
+      }
+    }
+    throw new ApiError(500, "Profile image not updated!");
+  } catch (error: any) {
+    console.error(error);
+    return ApiResponse(c, error.code, error.message);
+  }
+};
+
+const deleteImage = async (c: Context) => {
+  try {
+    const userId = c.get("requestUser")._id;
+    const requestUser = await User.findById(userId);
+
+    if (requestUser && requestUser.image !== "") {
+      const imageData = JSON.parse(requestUser.image!);
+      await imagekitDelete(imageData.fid);
+
+      requestUser.image = "";
+      await requestUser.save({ validateBeforeSave: true });
+
+      const userInfo = createUserInfo(requestUser);
+      await generateAccess(c, userInfo);
+
+      return ApiResponse(
+        c,
+        200,
+        "Profile image deleted successfully!",
+        userInfo
+      );
+    }
+    throw new ApiError(400, "Profile image not available!");
+  } catch (error: any) {
+    return ApiResponse(c, error.code, error.message);
+  }
+};
+
 const changePassword = async (c: Context) => {
   try {
     const { old_password, new_password } = c.get("validData");
@@ -59,9 +133,7 @@ const changePassword = async (c: Context) => {
 
     const userId = c.get("requestUser")._id;
 
-    const requestUser = await User.findById(userId).select(
-      "+password"
-    );
+    const requestUser = await User.findById(userId).select("+password");
 
     if (!requestUser) {
       throw new ApiError(403, "Invalid authorization!");
@@ -100,4 +172,10 @@ const userInformation = async (c: Context) => {
   }
 };
 
-export { profileSetup, changePassword, userInformation };
+export {
+  profileSetup,
+  updateImage,
+  deleteImage,
+  changePassword,
+  userInformation,
+};

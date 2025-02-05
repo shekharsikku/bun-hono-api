@@ -5,7 +5,7 @@ import UserRoutes from "./user";
 import FeedRoutes from "./feed";
 import User from "../models/user";
 
-const routes = new Hono().basePath("/api");
+const routes = new Hono();
 
 routes.route("/auth", AuthRoutes);
 routes.route("/user", UserRoutes);
