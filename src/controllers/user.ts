@@ -1,8 +1,13 @@
 import type { Context } from "hono";
-import { genSalt, hash, compare } from "bcryptjs";
+import { hash, verify } from "argon2";
 import { ApiError, ApiResponse } from "../utils";
 import { imagekitUpload, imagekitDelete } from "../utils/imagekit";
-import { generateAccess, hasEmptyField, createUserInfo } from "../helpers";
+import {
+  generateAccess,
+  hasEmptyField,
+  createUserInfo,
+  argonOptions,
+} from "../helpers";
 import User from "../models/user";
 
 const profileSetup = async (c: Context) => {
@@ -145,14 +150,13 @@ const changePassword = async (c: Context) => {
       throw new ApiError(403, "Invalid authorization!");
     }
 
-    const isCorrect = await compare(old_password, requestUser.password!);
+    const isCorrect = await verify(requestUser.password!, old_password);
 
     if (!isCorrect) {
       throw new ApiError(403, "Incorrect old password!");
     }
 
-    const hashSalt = await genSalt(12);
-    requestUser.password = await hash(new_password, hashSalt);
+    requestUser.password = await hash(new_password, argonOptions);
     await requestUser.save({ validateBeforeSave: true });
 
     const userInfo = createUserInfo(requestUser);

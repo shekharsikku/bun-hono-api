@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import type { Options } from "argon2";
 import type { UserInterface } from "../interface";
 import { Types } from "mongoose";
 import { setCookie } from "hono/cookie";
@@ -87,10 +88,19 @@ const createUserInfo = (user: UserInterface) => {
   return userInfo as UserInterface;
 };
 
+const argonOptions: Options = {
+  type: 2,
+  timeCost: 4,
+  memoryCost: 2 ** 16,
+  parallelism: 2,
+  hashLength: 32,
+};
+
 export {
   generateAccess,
   generateRefresh,
   authorizeCookie,
   hasEmptyField,
   createUserInfo,
+  argonOptions,
 };

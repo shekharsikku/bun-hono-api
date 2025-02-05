@@ -1,12 +1,13 @@
 import type { Context } from "hono";
 import { deleteCookie } from "hono/cookie";
-import { genSalt, hash, compare } from "bcryptjs";
+import { hash, verify } from "argon2";
 import { ApiError, ApiResponse } from "../utils";
 import {
   authorizeCookie,
   createUserInfo,
   generateAccess,
   generateRefresh,
+  argonOptions,
 } from "../helpers";
 import User from "../models/user";
 import env from "../utils/env";
@@ -21,8 +22,7 @@ const signUpUser = async (c: Context) => {
       throw new ApiError(409, "Email already exists!");
     }
 
-    const hashSalt = await genSalt(12);
-    const hashedPassword = await hash(password, hashSalt);
+    const hashedPassword = await hash(password, argonOptions);
 
     await User.create({ email, password: hashedPassword });
 
@@ -53,7 +53,7 @@ const signInUser = async (c: Context) => {
       throw new ApiError(404, "User not exists!");
     }
 
-    const isCorrect = await compare(password, existsUser.password!);
+    const isCorrect = await verify(existsUser.password!, password);
 
     if (!isCorrect) {
       throw new ApiError(403, "Incorrect password!");
