@@ -4,6 +4,7 @@ import type { UserInterface } from "../interface";
 import { Types } from "mongoose";
 import { setCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
+import crypto from "crypto";
 import env from "../utils/env";
 
 const generateIssuedExpired = (seconds: number) => {
@@ -96,6 +97,14 @@ const argonOptions: Options = {
   hashLength: 32,
 };
 
+const generateSecureCode = (length = 6) => {
+  const digits = "0123456789";
+  return Array.from(
+    { length },
+    () => digits[crypto.randomInt(0, digits.length)]
+  ).join("");
+};
+
 export {
   generateAccess,
   generateRefresh,
@@ -103,4 +112,5 @@ export {
   hasEmptyField,
   createUserInfo,
   argonOptions,
+  generateSecureCode,
 };
