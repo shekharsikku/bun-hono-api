@@ -10,17 +10,38 @@ interface UserInterface extends Document {
   image?: string;
   bio?: string;
   setup?: boolean;
+  verified?: boolean;
+  status?: "active" | "inactive";
+  lastLoginAt?: Date;
+  verification?: {
+    code: string;
+    expiry: Date;
+    attempts?: number;
+  };
+  reset?: {
+    code: string;
+    expiry: Date;
+    attempts?: number;
+  };
   authentication?: {
     _id?: Types.ObjectId;
     token: string;
     expiry: Date;
     device?: string;
+    lastUsedAt?: Date;
+    ipAddress?: string;
   }[];
 }
 
 interface TokenInterface {
   access?: string;
   refresh?: string;
+}
+
+interface FriendInterface extends Document {
+  requester: Types.ObjectId;
+  recipient: Types.ObjectId;
+  status: "pending" | "accepted" | "rejected" | "canceled" | "blocked";
 }
 
 /** feed interface */

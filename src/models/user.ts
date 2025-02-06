@@ -27,7 +27,7 @@ const UserSchema = new Schema<UserInterface>(
     gender: {
       type: String,
       enum: ["Male", "Female", "Other"],
-      default: null,
+      default: "Other",
     },
     image: {
       type: String,
@@ -41,12 +41,45 @@ const UserSchema = new Schema<UserInterface>(
       type: Boolean,
       default: false,
     },
+    verified: {
+      type: Boolean,
+      default: false,
+    },
+    status: {
+      type: String,
+      enum: ["active", "inactive"],
+      default: "active",
+    },
+    lastLoginAt: {
+      type: Date,
+      default: Date.now,
+    },
+    verification: {
+      _id: false,
+      code: String,
+      expiry: Date,
+      attempts: Number,
+    },
+    reset: {
+      _id: false,
+      code: String,
+      expiry: Date,
+      attempts: Number,
+    },
     authentication: {
       type: [
         {
           token: String,
           expiry: Date,
           device: {
+            type: String,
+            default: null,
+          },
+          lastUsedAt: {
+            type: Date,
+            default: Date.now,
+          },
+          ipAddress: {
             type: String,
             default: null,
           },
