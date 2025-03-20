@@ -5,8 +5,8 @@ import { bodyLimit } from "hono/body-limit";
 import { poweredBy } from "hono/powered-by";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
-import env from "./utils/env";
-import routes from "./routes";
+import env from "@/utils/env";
+import routes from "@/routes";
 
 const app = new Hono();
 
@@ -22,8 +22,8 @@ app.use(
 app.use(
   bodyLimit({
     maxSize: env.BODY_LIMIT * 1024 * 1024,
-    onError: (c: Context) => {
-      return c.json({ error: "Request payload is too large!" }, 413);
+    onError: (ctx: Context) => {
+      return ctx.json({ message: "Request payload is too large!" }, 413);
     },
   })
 );
@@ -33,21 +33,22 @@ app.use(poweredBy());
 app.use(prettyJSON());
 app.use(secureHeaders());
 
-app.get("/hello", (c: Context) => {
-  return c.json({ message: "Hello from Hono via Bun!" });
+app.get("/hello", (ctx: Context) => {
+  const message = "Hono + Bun says hello! Ready to serve your requests!";
+  return ctx.json({ message }, 200);
 });
 
 app.route("/api", routes);
 
-app.onError((e: Error, c: Context) => {
-  const message = e.message || "Something Went Wrong!";
-  console.log(`Error: ${message}`);
-  return c.json({ error: message }, 500);
+app.onError((err: Error, ctx: Context) => {
+  const message = err.message || "Oops! Something went wrong!";
+  console.error(`Error: ${message}`);
+  return ctx.json({ message }, 500);
 });
 
-app.notFound((c: Context) => {
-  const message = `Requested url '${c.req.path}' not found on the server!`;
-  return c.json({ error: message }, 404);
+app.notFound((ctx: Context) => {
+  const message = `Requested url '${ctx.req.path}' not found on the server!`;
+  return ctx.json({ message }, 404);
 });
 
 export default app;
