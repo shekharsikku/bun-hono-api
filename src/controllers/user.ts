@@ -1,4 +1,5 @@
 import type { Context } from "hono";
+import { Types } from "mongoose";
 import { hash, verify } from "argon2";
 import { ApiError, ApiResponse } from "@/utils";
 import { imagekitUpload, imagekitDelete } from "@/utils/imagekit";
@@ -10,6 +11,7 @@ import {
   argonOptions,
 } from "@/helpers";
 import User from "@/models/user";
+import Conversation from "@/models/conversation";
 
 const profileSetup = async (ctx: Context) => {
   try {
@@ -186,10 +188,70 @@ const userInformation = async (ctx: Context) => {
   }
 };
 
+const searchUsers = async (ctx: Context) => {
+  try {
+    const search = ctx.req.query("search");
+
+    if (!search) {
+      throw new ApiError(400, "Search query is required!");
+    }
+
+    const terms = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+    const regex = new RegExp(terms, "i");
+
+    const result = await User.find({
+      $and: [
+        { _id: { $ne: ctx.req.user?._id } },
+        { setup: true },
+        { $or: [{ name: regex }, { username: regex }, { email: regex }] },
+      ],
+    }).lean();
+
+    if (result.length == 0) {
+      throw new ApiError(404, "No any user found!");
+    }
+
+    return ApiResponse(ctx, 200, "Available contacts!", result);
+  } catch (error: any) {
+    return ApiResponse(ctx, error.code, error.message);
+  }
+};
+
+const fetchContacts = async (ctx: Context) => {
+  try {
+    const uid = new Types.ObjectId(ctx.req.user?._id);
+
+    const conversations = await Conversation.find({
+      participants: uid,
+    })
+      .sort({ interaction: -1 })
+      .populate("participants", "name email username gender image bio")
+      .lean();
+
+    const contacts = conversations
+      .map((conversation) => {
+        const contact = conversation.participants.find(
+          (participant: any) => !participant._id.equals(uid)
+        );
+
+        return contact
+          ? { ...contact, interaction: conversation.interaction }
+          : null;
+      })
+      .filter(Boolean);
+
+    return ApiResponse(ctx, 200, "Contacts fetched successfully!", contacts);
+  } catch (error: any) {
+    return ApiResponse(ctx, 500, "An error occurred while fetching contacts!");
+  }
+};
+
 export {
   profileSetup,
   updateImage,
   deleteImage,
   changePassword,
   userInformation,
+  searchUsers,
+  fetchContacts,
 };
