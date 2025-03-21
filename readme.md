@@ -1,6 +1,6 @@
 ## **Bun & Hono Api**
 
-This is a lightweight, high-performance Api built with `Bun` and `Hono`, leveraging `Mongoose` for MongoDB interactions, `bcryptjs` for password hashing, and `Zod` for validation.
+This is a lightweight, high-performance Api built with `Bun` and `Hono`, leveraging `Mongoose` for MongoDB interactions, `ioredis` for Redis client, `argon2` for password hashing, and `Zod` for validation.
 
 ### **Packages Installation**
 
@@ -58,20 +58,20 @@ bun run start
 ```
 .
 ├── src/
-│   ├── index.ts        # Entry point
-│   ├── server.ts       # Socket.io config
-│   ├── app.ts          # Hono app config
-│   ├── routes/         # API routes
-│   ├── models/         # Mongoose models
-│   ├── middleware/     # Custom middlewares
-│   ├── utils/          # Utility functions
-│   ├── helpers/        # Helper functions
-│   ├── database/       # MongoDB and Redis config
-│   ├── controllers/    # Helper functions
+│   ├── index.ts        # Entry Point
+│   ├── server.ts       # Socket.IO Config
+│   ├── app.ts          # Hono App Config
+│   ├── routes/         # API Routes
+│   ├── models/         # Mongoose Models
+│   ├── middleware/     # Custom Middlewares
+│   ├── utils/          # Utility Functions
+│   ├── helpers/        # Helper Functions
+│   ├── database/       # Mongoose & Redis Config
+│   ├── controllers/    # API Controllers
 │
-├── bun.lockb           # Lockfile
-├── package.json        # Project metadata
-└── README.md           # Documentation
+├── bun.lockb           # Bun Lockfile
+├── package.json        # Project Metadata
+└── readme.md           # Documentation
 ```
 
 This project was created using `bun init` in bun v1.2.1. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.

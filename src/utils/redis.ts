@@ -1,13 +1,14 @@
 import type { UserInterface } from "@/interface";
 import { Types } from "mongoose";
 import { redis } from "@/database";
+import env from "@/utils/env";
 
-const setData = async (data: UserInterface, exp = 1800) => {
+const setData = async (data: UserInterface) => {
   try {
     const key = `user:${data._id}`;
     const value = JSON.stringify(data);
 
-    return await redis?.set(key, value, "EX", exp);
+    return await redis?.set(key, value, "EX", env.ACCESS_EXPIRY);
   } catch (error: any) {
     return null;
   }
