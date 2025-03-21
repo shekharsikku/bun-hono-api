@@ -1,12 +1,12 @@
 import { Hono } from "hono";
-import { authAccess, authRefresh } from "../middlewares";
-import { signInSchema, signUpSchema, validateSchema } from "../utils/schema";
+import { authAccess, authRefresh } from "@/middlewares";
+import { validateSchema, signInSchema, signUpSchema } from "@/utils/schema";
 import {
   refreshAuth,
   signInUser,
   signOutUser,
   signUpUser,
-} from "../controllers/auth";
+} from "@/controllers/auth";
 
 const auth = new Hono();
 
