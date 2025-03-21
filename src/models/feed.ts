@@ -1,5 +1,5 @@
 import { Schema, model } from "mongoose";
-import type { FeedInterface } from "../interface";
+import type { FeedInterface } from "@/interface";
 
 const LikeSchema = new Schema({
   uid: { type: Schema.Types.ObjectId, ref: "User", required: true },
