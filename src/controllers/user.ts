@@ -1,19 +1,20 @@
 import type { Context } from "hono";
 import { hash, verify } from "argon2";
-import { ApiError, ApiResponse } from "../utils";
-import { imagekitUpload, imagekitDelete } from "../utils/imagekit";
+import { ApiError, ApiResponse } from "@/utils";
+import { imagekitUpload, imagekitDelete } from "@/utils/imagekit";
+import { setData } from "@/utils/redis";
 import {
   generateAccess,
   hasEmptyField,
   createUserInfo,
   argonOptions,
-} from "../helpers";
-import User from "../models/user";
+} from "@/helpers";
+import User from "@/models/user";
 
-const profileSetup = async (c: Context) => {
+const profileSetup = async (ctx: Context) => {
   try {
-    const { name, username, gender, bio } = c.get("validData");
-    const requestUser = c.get("requestUser");
+    const { name, username, gender, bio } = ctx.get("validated");
+    const requestUser = ctx.req.user;
 
     if (username !== requestUser?.username) {
       const existsUsername = await User.exists({ username });
@@ -43,22 +44,23 @@ const profileSetup = async (c: Context) => {
     const userInfo = createUserInfo(updatedProfile);
 
     if (!userInfo.setup) {
-      return ApiResponse(c, 200, "Please, complete your profile!", userInfo);
+      return ApiResponse(ctx, 200, "Please, complete your profile!", userInfo);
     }
 
-    await generateAccess(c, userInfo);
+    await generateAccess(ctx, userInfo._id!);
+    await setData(userInfo);
 
-    return ApiResponse(c, 200, "Profile updated successfully!", userInfo);
+    return ApiResponse(ctx, 200, "Profile updated successfully!", userInfo);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-const updateImage = async (c: Context) => {
+const updateImage = async (ctx: Context) => {
   try {
-    const requestUser = c.get("requestUser");
+    const requestUser = ctx.req.user;
 
-    const dataBody = await c.req.parseBody();
+    const dataBody = await ctx.req.parseBody();
     const imageFile = dataBody.image;
 
     if (!imageFile || !(imageFile instanceof File)) {
@@ -68,7 +70,7 @@ const updateImage = async (c: Context) => {
     const userProfile = await User.findById(requestUser?._id);
 
     if (userProfile) {
-      if (userProfile.image !== "") {
+      if (userProfile.image && userProfile.image !== "") {
         const imageData = JSON.parse(userProfile.image!);
         await imagekitDelete(imageData.fid);
       }
@@ -83,10 +85,11 @@ const updateImage = async (c: Context) => {
         await userProfile.save({ validateBeforeSave: true });
 
         const userInfo = createUserInfo(userProfile);
-        await generateAccess(c, userInfo);
+        await generateAccess(ctx, userInfo._id!);
+        await setData(userInfo);
 
         return ApiResponse(
-          c,
+          ctx,
           200,
           "Profile image updated successfully!",
           userInfo
@@ -95,16 +98,15 @@ const updateImage = async (c: Context) => {
     }
     throw new ApiError(500, "Profile image not updated!");
   } catch (error: any) {
-    console.error(error);
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-const deleteImage = async (c: Context) => {
+const deleteImage = async (ctx: Context) => {
   try {
-    const requestUser = c.get("requestUser");
+    const requestUser = ctx.req.user;
 
-    if (requestUser && requestUser.image !== "") {
+    if (requestUser && requestUser?.image !== "") {
       const imageData = JSON.parse(requestUser.image!);
       await imagekitDelete(imageData.fid);
 
@@ -119,10 +121,11 @@ const deleteImage = async (c: Context) => {
       }
 
       const userInfo = createUserInfo(updatedProfile);
-      await generateAccess(c, userInfo);
+      await generateAccess(ctx, userInfo._id!);
+      await setData(userInfo);
 
       return ApiResponse(
-        c,
+        ctx,
         200,
         "Profile image deleted successfully!",
         userInfo
@@ -130,19 +133,19 @@ const deleteImage = async (c: Context) => {
     }
     throw new ApiError(400, "Profile image not available!");
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-const changePassword = async (c: Context) => {
+const changePassword = async (ctx: Context) => {
   try {
-    const { old_password, new_password } = c.get("validData");
+    const { old_password, new_password } = ctx.get("validated");
 
     if (old_password === new_password) {
       throw new ApiError(400, "Please, choose a different password!");
     }
 
-    const userId = c.get("requestUser")._id;
+    const userId = ctx.req.user?._id;
 
     const requestUser = await User.findById(userId).select("+password");
 
@@ -160,25 +163,26 @@ const changePassword = async (c: Context) => {
     await requestUser.save({ validateBeforeSave: true });
 
     const userInfo = createUserInfo(requestUser);
-    await generateAccess(c, userInfo);
+    await generateAccess(ctx, userInfo._id!);
+    await setData(userInfo);
 
-    return ApiResponse(c, 202, "Password changed successfully!", userInfo);
+    return ApiResponse(ctx, 200, "Password changed successfully!", userInfo);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-const userInformation = async (c: Context) => {
+const userInformation = async (ctx: Context) => {
   try {
-    const requestUser = c.get("requestUser");
+    const requestUser = ctx.req.user;
 
     let message = requestUser?.setup
       ? "User profile information!"
       : "Please, complete your profile!";
 
-    return ApiResponse(c, 200, message, requestUser);
+    return ApiResponse(ctx, 200, message, requestUser);
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 

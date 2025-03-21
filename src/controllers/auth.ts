@@ -1,20 +1,21 @@
 import type { Context } from "hono";
 import { deleteCookie } from "hono/cookie";
 import { hash, verify } from "argon2";
-import { ApiError, ApiResponse } from "../utils";
+import { ApiError, ApiResponse } from "@/utils";
+import { setData, delData } from "@/utils/redis";
 import {
   authorizeCookie,
   createUserInfo,
   generateAccess,
   generateRefresh,
   argonOptions,
-} from "../helpers";
-import User from "../models/user";
-import env from "../utils/env";
+} from "@/helpers";
+import User from "@/models/user";
+import env from "@/utils/env";
 
-const signUpUser = async (c: Context) => {
+const signUpUser = async (ctx: Context) => {
   try {
-    const { email, password } = c.get("validData");
+    const { email, password } = ctx.get("validated");
 
     const existsEmail = await User.exists({ email });
 
@@ -26,15 +27,15 @@ const signUpUser = async (c: Context) => {
 
     await User.create({ email, password: hashedPassword });
 
-    return ApiResponse(c, 201, "Signed up successfully!");
+    return ApiResponse(ctx, 201, "Signed up successfully!");
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-const signInUser = async (c: Context) => {
+const signInUser = async (ctx: Context) => {
   try {
-    const { email, username, password } = c.get("validData");
+    const { email, username, password } = ctx.get("validated");
     const conditions = [];
 
     if (email) {
@@ -60,13 +61,14 @@ const signInUser = async (c: Context) => {
     }
 
     const userInfo = createUserInfo(existsUser);
-    await generateAccess(c, userInfo);
+    await generateAccess(ctx, userInfo._id!);
+    await setData(userInfo);
 
     if (!userInfo.setup) {
-      return ApiResponse(c, 202, "Please, complete your profile!", userInfo);
+      return ApiResponse(ctx, 200, "Please, complete your profile!", userInfo);
     }
 
-    const refreshToken = await generateRefresh(c, userInfo._id!);
+    const refreshToken = await generateRefresh(ctx, userInfo._id!);
     const refreshExpiry = env.REFRESH_EXPIRY;
 
     existsUser.authentication?.push({
@@ -75,25 +77,22 @@ const signInUser = async (c: Context) => {
     });
 
     const authorizeUser = await existsUser.save();
-    const authorizeId = authorizeUser.authentication?.filter(
+    const authorizeId = authorizeUser.authentication?.find(
       (auth) => auth.token === refreshToken
-    )[0]._id!;
+    )?._id!;
 
-    authorizeCookie(c, authorizeId.toString());
+    authorizeCookie(ctx, authorizeId.toString());
 
-    return ApiResponse(c, 200, "Signed in successfully!", userInfo);
+    return ApiResponse(ctx, 200, "Signed in successfully!", userInfo);
   } catch (error: any) {
-    deleteCookie(c, "access");
-    deleteCookie(c, "refresh");
-    deleteCookie(c, "current");
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-const signOutUser = async (c: Context) => {
-  const requestUser = c.get("requestUser");
-  const refreshToken = deleteCookie(c, "refresh");
-  const authorizeId = deleteCookie(c, "current");
+const signOutUser = async (ctx: Context) => {
+  const requestUser = ctx.req.user!;
+  const refreshToken = deleteCookie(ctx, "refresh");
+  const authorizeId = deleteCookie(ctx, "current");
 
   if (requestUser.setup && refreshToken && authorizeId) {
     await User.updateOne(
@@ -106,13 +105,14 @@ const signOutUser = async (c: Context) => {
     );
   }
 
-  deleteCookie(c, "access");
-  return ApiResponse(c, 200, "Signed out successfully!", requestUser);
+  deleteCookie(ctx, "access");
+  await delData(requestUser._id!);
+  return ApiResponse(ctx, 200, "Signed out successfully!");
 };
 
-const refreshAuth = async (c: Context) => {
-  const requestUser = c.get("requestUser");
-  return ApiResponse(c, 200, "Authentication refreshed!", requestUser);
+const refreshAuth = async (ctx: Context) => {
+  const requestUser = ctx.req.user;
+  return ApiResponse(ctx, 200, "Authentication refreshed!", requestUser);
 };
 
 export { signUpUser, signInUser, signOutUser, refreshAuth };
