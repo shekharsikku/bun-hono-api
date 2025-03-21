@@ -1,5 +1,5 @@
 import { Types, Schema, model } from "mongoose";
-import type { UserInterface } from "../interface";
+import type { UserInterface } from "@/interface";
 
 const UserSchema = new Schema<UserInterface>(
   {
@@ -41,48 +41,11 @@ const UserSchema = new Schema<UserInterface>(
       type: Boolean,
       default: false,
     },
-    verified: {
-      type: Boolean,
-      default: false,
-    },
-    status: {
-      type: String,
-      enum: ["active", "inactive"],
-      default: "active",
-    },
-    lastLoginAt: {
-      type: Date,
-      default: Date.now,
-    },
-    verification: {
-      _id: false,
-      code: String,
-      expiry: Date,
-      attempts: Number,
-    },
-    reset: {
-      _id: false,
-      code: String,
-      expiry: Date,
-      attempts: Number,
-    },
     authentication: {
       type: [
         {
           token: String,
           expiry: Date,
-          device: {
-            type: String,
-            default: null,
-          },
-          lastUsedAt: {
-            type: Date,
-            default: Date.now,
-          },
-          ipAddress: {
-            type: String,
-            default: null,
-          },
         },
       ],
       select: false,
