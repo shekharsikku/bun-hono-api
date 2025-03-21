@@ -15,6 +15,7 @@ const env = cleanEnv(process.env, {
   REFRESH_EXPIRY: num(),
 
   MONGODB_URI: url(),
+  REDIS_URI: url(),
   CORS_ORIGIN: str(),
   PORT: port(),
 

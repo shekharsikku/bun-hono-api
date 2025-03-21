@@ -1,6 +1,6 @@
 import type { Context, Next } from "hono";
 import { z, ZodSchema, ZodError } from "zod";
-import { ApiResponse } from "../utils";
+import { ApiResponse } from "@/utils";
 
 const ValidationError = (
   error: ZodError
@@ -12,15 +12,15 @@ const ValidationError = (
 };
 
 const validateSchema =
-  (schema: ZodSchema) => async (c: Context, next: Next) => {
+  (schema: ZodSchema) => async (ctx: Context, next: Next) => {
     try {
-      const jsonData = await c.req.json();
+      const jsonData = await ctx.req.json();
       const parsedData = schema.parse(jsonData);
-      c.set("validData", parsedData);
+      ctx.set("validated", parsedData);
       await next();
     } catch (error: any) {
       const errors = ValidationError(error);
-      return ApiResponse(c, 400, "Validation Error!", null, errors);
+      return ApiResponse(ctx, 400, "Validation Error!", null, errors);
     }
   };
 

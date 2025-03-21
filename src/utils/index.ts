@@ -22,7 +22,7 @@ type Response = {
 };
 
 const ApiResponse = (
-  c: Context,
+  ctx: Context,
   code: ContentfulStatusCode,
   message: string,
   data: any = null,
@@ -33,7 +33,7 @@ const ApiResponse = (
 
   if (data) response.data = data;
   if (error) response.error = error;
-  return c.json(response, code);
+  return ctx.json(response, code);
 };
 
 export { ApiError, ApiResponse };
