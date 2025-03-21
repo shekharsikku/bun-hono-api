@@ -7,6 +7,8 @@ import {
   userInformation,
   updateImage,
   deleteImage,
+  searchUsers,
+  fetchContacts,
 } from "@/controllers/user";
 
 const user = new Hono();
@@ -26,5 +28,7 @@ user.patch(
 user.patch("/update-image", authAccess, updateImage);
 user.delete("/delete-image", authAccess, deleteImage);
 user.get("/user-information", authAccess, userInformation);
+user.get("/search-users", authAccess, searchUsers);
+user.get("/fetch-contacts", authAccess, fetchContacts);
 
 export default user;
