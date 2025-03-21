@@ -19,7 +19,8 @@ IMAGEKIT_PUBLIC_KEY=""
 IMAGEKIT_PRIVATE_KEY=""
 IMAGEKIT_URL_ENDPOINT=""
 
-MONGODB_URI=""
+RESEND_API_KEY="",
+RESEND_ORIGIN="",
 
 ACCESS_SECRET=""
 ACCESS_EXPIRY=""
@@ -27,10 +28,12 @@ ACCESS_EXPIRY=""
 REFRESH_SECRET=""
 REFRESH_EXPIRY=""
 
-PORT=""
+MONGODB_URI=""
+REDIS_URI=""
 CORS_ORIGIN=""
-BODY_LIMIT=""
+PORT=""
 
+BODY_LIMIT=""
 NODE_ENV=""
 ```
 
@@ -55,17 +58,20 @@ bun run start
 ```
 .
 ├── src/
-│   ├── index.ts    # Entry point
-│   ├── app.ts      # Hono app config
-│   ├── routes/     # API routes
-│   ├── models/     # Mongoose models
-│   ├── middleware/ # Custom middlewares
-│   ├── utils/      # Utility functions
-│   ├── helpers/    # Helper functions
+│   ├── index.ts        # Entry point
+│   ├── server.ts       # Socket.io config
+│   ├── app.ts          # Hono app config
+│   ├── routes/         # API routes
+│   ├── models/         # Mongoose models
+│   ├── middleware/     # Custom middlewares
+│   ├── utils/          # Utility functions
+│   ├── helpers/        # Helper functions
+│   ├── database/       # MongoDB and Redis config
+│   ├── controllers/    # Helper functions
 │
-├── bun.lockb       # Lockfile
-├── package.json    # Project metadata
-└── README.md       # Documentation
+├── bun.lockb           # Lockfile
+├── package.json        # Project metadata
+└── README.md           # Documentation
 ```
 
 This project was created using `bun init` in bun v1.2.1. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
