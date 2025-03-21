@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { authAccess } from "../middlewares";
+import { authAccess } from "@/middlewares";
 import {
   newFeed,
   editFeed,
@@ -11,7 +11,7 @@ import {
   getFeedById,
   getFilteredFeeds,
   getUserFeeds,
-} from "../controllers/feed";
+} from "@/controllers/feed";
 
 const feed = new Hono();
 
