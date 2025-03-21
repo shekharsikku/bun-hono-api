@@ -1,28 +1,24 @@
 import type { Context } from "hono";
 import type { Options } from "argon2";
-import type { UserInterface } from "../interface";
+import type { UserInterface } from "@/interface";
 import { Types } from "mongoose";
+import { randomBytes } from "crypto";
 import { setCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
-import crypto from "crypto";
-import env from "../utils/env";
+import env from "@/utils/env";
 
 const generateIssuedExpired = (seconds: number) => {
   const issuedAt = Math.floor(Date.now() / 1000);
   return { iat: issuedAt, exp: issuedAt + seconds };
 };
 
-const generateAccess = async (c: Context, user: UserInterface) => {
+const generateAccess = async (ctx: Context, uid: Types.ObjectId) => {
   const accessExpiry = env.ACCESS_EXPIRY;
   const { iat, exp } = generateIssuedExpired(accessExpiry);
 
-  const accessToken = await sign(
-    { user, iat, exp },
-    env.ACCESS_SECRET,
-    "HS256"
-  );
+  const accessToken = await sign({ uid, iat, exp }, env.ACCESS_SECRET, "HS256");
 
-  setCookie(c, "access", accessToken, {
+  setCookie(ctx, "access", accessToken, {
     maxAge: accessExpiry,
     httpOnly: true,
     sameSite: "Strict",
@@ -32,7 +28,7 @@ const generateAccess = async (c: Context, user: UserInterface) => {
   return accessToken;
 };
 
-const generateRefresh = async (c: Context, uid: Types.ObjectId) => {
+const generateRefresh = async (ctx: Context, uid: Types.ObjectId) => {
   const refreshExpiry = env.REFRESH_EXPIRY;
   const { iat, exp } = generateIssuedExpired(refreshExpiry);
 
@@ -42,7 +38,7 @@ const generateRefresh = async (c: Context, uid: Types.ObjectId) => {
     "HS512"
   );
 
-  setCookie(c, "refresh", refreshToken, {
+  setCookie(ctx, "refresh", refreshToken, {
     maxAge: refreshExpiry * 2,
     httpOnly: true,
     sameSite: "Strict",
@@ -52,10 +48,10 @@ const generateRefresh = async (c: Context, uid: Types.ObjectId) => {
   return refreshToken;
 };
 
-const authorizeCookie = (c: Context, authId: string) => {
+const authorizeCookie = (ctx: Context, authId: string) => {
   const authExpiry = env.REFRESH_EXPIRY;
 
-  setCookie(c, "current", authId, {
+  setCookie(ctx, "current", authId, {
     maxAge: authExpiry * 2,
     httpOnly: true,
     sameSite: "Strict",
@@ -90,19 +86,12 @@ const createUserInfo = (user: UserInterface) => {
 };
 
 const argonOptions: Options = {
-  type: 2,
+  hashLength: 48,
   timeCost: 4,
   memoryCost: 2 ** 16,
   parallelism: 2,
-  hashLength: 32,
-};
-
-const generateSecureCode = (length = 6) => {
-  const digits = "0123456789";
-  return Array.from(
-    { length },
-    () => digits[crypto.randomInt(0, digits.length)]
-  ).join("");
+  type: 2,
+  salt: randomBytes(32),
 };
 
 export {
@@ -112,5 +101,4 @@ export {
   hasEmptyField,
   createUserInfo,
   argonOptions,
-  generateSecureCode,
 };
