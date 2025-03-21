@@ -10,26 +10,10 @@ interface UserInterface extends Document {
   image?: string;
   bio?: string;
   setup?: boolean;
-  verified?: boolean;
-  status?: "active" | "inactive";
-  lastLoginAt?: Date;
-  verification?: {
-    code: string;
-    expiry: Date;
-    attempts?: number;
-  };
-  reset?: {
-    code: string;
-    expiry: Date;
-    attempts?: number;
-  };
   authentication?: {
     _id?: Types.ObjectId;
     token: string;
     expiry: Date;
-    device?: string;
-    lastUsedAt?: Date;
-    ipAddress?: string;
   }[];
 }
 
@@ -39,12 +23,34 @@ interface TokenInterface {
 }
 
 interface FriendInterface extends Document {
+  _id?: Types.ObjectId;
   requester: Types.ObjectId;
   recipient: Types.ObjectId;
   status: "pending" | "accepted" | "rejected" | "canceled" | "blocked";
+  createdAt?: Date;
+  updatedAt?: Date;
 }
 
-/** feed interface */
+interface ConversationInterface extends Document {
+  _id?: Types.ObjectId;
+  participants: Types.ObjectId[];
+  messages: Types.ObjectId[];
+  interaction: Date;
+}
+
+interface MessageInterface extends Document {
+  _id?: Types.ObjectId;
+  sender: Types.ObjectId;
+  recipient: Types.ObjectId;
+  type: "default" | "edited" | "deleted";
+  content: {
+    type: "text" | "file";
+    text?: string;
+    file?: string;
+  };
+  deletedAt: Date;
+}
+
 interface FeedInterface extends Document {
   _id?: Types.ObjectId;
   title: string;
@@ -55,19 +61,19 @@ interface FeedInterface extends Document {
   location?: string;
   likes: {
     _id?: Types.ObjectId;
-    uid: Types.ObjectId; // User who liked
+    uid: Types.ObjectId;
     time?: Date;
   }[];
   comments: {
     _id?: Types.ObjectId;
-    uid: Types.ObjectId; // User who commented
+    uid: Types.ObjectId;
     text: string;
     time?: Date;
   }[];
   mentioned: {
     _id?: Types.ObjectId;
-    uid: Types.ObjectId; // User who is mentioned
+    uid: Types.ObjectId;
     time?: Date;
   }[];
-  user: Types.ObjectId; // Feed creator/owner
+  user: Types.ObjectId;
 }
