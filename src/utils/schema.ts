@@ -77,10 +77,30 @@ const passwordSchema = z.object({
     }),
 });
 
+const messageSchema = z
+  .object({
+    type: z.enum(["text", "file"]),
+    text: z.string().optional(),
+    file: z.string().optional(),
+  })
+  .refine(
+    (data) => {
+      if (data.type === "text") return !!data.text;
+      if (data.type === "file") return !!data.file;
+      return true;
+    },
+    {
+      message:
+        "Text is required if type is 'text', and File is required if type is 'file'",
+      path: ["text", "file"],
+    }
+  );
+
 export {
   validateSchema,
   signUpSchema,
   signInSchema,
   profileSchema,
   passwordSchema,
+  messageSchema,
 };
