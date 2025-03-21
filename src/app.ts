@@ -5,6 +5,7 @@ import { bodyLimit } from "hono/body-limit";
 import { poweredBy } from "hono/powered-by";
 import { prettyJSON } from "hono/pretty-json";
 import { secureHeaders } from "hono/secure-headers";
+import { redisReconnect } from "@/middlewares";
 import env from "@/utils/env";
 import routes from "@/routes";
 
@@ -32,6 +33,7 @@ app.use(logger());
 app.use(poweredBy());
 app.use(prettyJSON());
 app.use(secureHeaders());
+app.use("/api/*", redisReconnect);
 
 app.get("/hello", (ctx: Context) => {
   const message = "Hono + Bun says hello! Ready to serve your requests!";

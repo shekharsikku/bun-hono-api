@@ -1,6 +1,7 @@
 import type { MiddlewareHandler, Context, Next } from "hono";
 import type { Types } from "mongoose";
-import { ApiError, ApiResponse } from "../utils";
+import { ApiError, ApiResponse } from "@/utils";
+import { setData, getData } from "@/utils/redis";
 import { getCookie, deleteCookie } from "hono/cookie";
 import { verify, decode } from "hono/jwt";
 import {
@@ -8,16 +9,17 @@ import {
   generateRefresh,
   createUserInfo,
   authorizeCookie,
-} from "../helpers";
-import User from "../models/user";
-import env from "../utils/env";
+} from "@/helpers";
+import { redis } from "@/database";
+import User from "@/models/user";
+import env from "@/utils/env";
 
 const authAccess: MiddlewareHandler = async (
-  c: Context,
+  ctx: Context,
   next: Next
 ): Promise<any> => {
   try {
-    const accessToken = getCookie(c, "access");
+    const accessToken = getCookie(ctx, "access");
     const accessSecret = env.ACCESS_SECRET;
 
     if (!accessToken) {
@@ -32,19 +34,30 @@ const authAccess: MiddlewareHandler = async (
       throw new ApiError(403, "Invalid access request!");
     }
 
-    c.set("requestUser", decodedPayload.user);
+    let userData = await getData(decodedPayload.uid as Types.ObjectId);
+
+    if (userData) {
+      ctx.req.user = userData;
+      return await next();
+    }
+
+    userData = await User.findById(decodedPayload.uid);
+    const userInfo = createUserInfo(userData!);
+
+    await setData(userInfo);
+    ctx.req.user = userInfo;
     await next();
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
 const deleteToken = async (
-  c: Context,
+  ctx: Context,
   userId: Types.ObjectId,
   refreshToken: string
 ) => {
-  const authorizeId = deleteCookie(c, "current");
+  const authorizeId = deleteCookie(ctx, "current");
 
   await User.updateOne(
     { _id: userId },
@@ -55,20 +68,20 @@ const deleteToken = async (
     }
   );
 
-  deleteCookie(c, "access");
-  deleteCookie(c, "refresh");
+  deleteCookie(ctx, "access");
+  deleteCookie(ctx, "refresh");
 };
 
 const authRefresh: MiddlewareHandler = async (
-  c: Context,
+  ctx: Context,
   next: Next
 ): Promise<any> => {
   try {
-    const refreshToken = getCookie(c, "refresh");
-    const authorizeId = getCookie(c, "current");
+    const refreshToken = getCookie(ctx, "refresh");
+    const authorizeId = getCookie(ctx, "current");
     const refreshSecret = env.REFRESH_SECRET;
 
-    if (!refreshToken) {
+    if (!refreshToken || !authorizeId) {
       throw new ApiError(401, "Unauthorized refresh request!");
     }
 
@@ -81,7 +94,7 @@ const authRefresh: MiddlewareHandler = async (
         const { payload } = decode(refreshToken);
         const userId = payload.uid as Types.ObjectId;
 
-        await deleteToken(c, userId, refreshToken);
+        await deleteToken(ctx, userId, refreshToken);
         throw new ApiError(401, "Please, login again to continue!");
       } else {
         throw new ApiError(403, "Invalid refresh request!");
@@ -89,7 +102,7 @@ const authRefresh: MiddlewareHandler = async (
     }
 
     const userId = decodedPayload.uid as Types.ObjectId;
-    const timeBefore = decodedPayload.exp! - env.ACCESS_EXPIRY;
+    const timeBefore = decodedPayload.exp! - env.REFRESH_EXPIRY / 2;
     const currentTime = Math.floor(Date.now() / 1000);
 
     const requestUser = await User.findOne({
@@ -109,7 +122,7 @@ const authRefresh: MiddlewareHandler = async (
     const userInfo = createUserInfo(requestUser);
 
     if (currentTime >= timeBefore && currentTime < decodedPayload.exp!) {
-      const newRefreshToken = await generateRefresh(c, userId);
+      const newRefreshToken = await generateRefresh(ctx, userId);
       const refreshExpiry = env.REFRESH_EXPIRY;
 
       const updatedAuth = await User.updateOne(
@@ -130,23 +143,40 @@ const authRefresh: MiddlewareHandler = async (
       );
 
       if (updatedAuth.modifiedCount > 0) {
-        authorizeCookie(c, authorizeId!);
-        await generateAccess(c, userInfo);
+        authorizeCookie(ctx, authorizeId!);
+        await generateAccess(ctx, userId);
       } else {
         throw new ApiError(403, "Invalid refresh request!");
       }
     } else if (currentTime >= decodedPayload.exp!) {
-      await deleteToken(c, requestUser._id, refreshToken);
+      await deleteToken(ctx, requestUser._id, refreshToken);
       throw new ApiError(401, "Please, login again to continue!");
     } else {
-      await generateAccess(c, userInfo);
+      await generateAccess(ctx, userId);
     }
 
-    c.set("requestUser", userInfo);
+    await setData(userInfo);
+    ctx.req.user = userInfo;
     await next();
   } catch (error: any) {
-    return ApiResponse(c, error.code, error.message);
+    return ApiResponse(ctx, error.code, error.message);
   }
 };
 
-export { authAccess, authRefresh };
+const redisReconnect: MiddlewareHandler = async (
+  ctx: Context,
+  next: Next
+): Promise<any> => {
+  if (!redis || redis.status !== "ready") {
+    console.warn("Redis is disconnected! Attempting to reconnect...");
+    try {
+      await redis?.connect();
+      console.log("Redis reconnected successfully!");
+    } catch (error: any) {
+      console.error("Redis reconnection failed!", error.message);
+    }
+  }
+  await next();
+};
+
+export { authAccess, authRefresh, redisReconnect };
