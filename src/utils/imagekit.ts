@@ -1,5 +1,5 @@
 import ImageKit from "imagekit";
-import env from "./env";
+import env from "@/utils/env";
 
 const imagekit = new ImageKit({
   publicKey: env.IMAGEKIT_PUBLIC_KEY,
@@ -20,7 +20,7 @@ const imagekitUpload = async (imageFile: File) => {
 
     return uploadResponse;
   } catch (error: any) {
-    console.log(`Failed to upload image: ${error.message}`);
+    console.error(`Failed to upload image: ${error.message}`);
     return null;
   }
 };
@@ -30,7 +30,7 @@ const imagekitDelete = async (imageId: string) => {
     const deleteResponse = await imagekit.deleteFile(imageId);
     return deleteResponse;
   } catch (error: any) {
-    console.log(`Failed to delete image file: ${error.message}`);
+    console.error(`Failed to delete image file: ${error.message}`);
     return null;
   }
 };
