@@ -17,6 +17,7 @@
     "hono": "^4.7.5",
     "imagekit": "^6.0.0",
     "ioredis": "^5.6.0",
+    "mongodb": "^6.15.0",
     "mongoose": "^8.12.1",
     "resend": "^4.1.2",
     "socket.io": "^4.8.1",
