@@ -19,8 +19,14 @@ const env = cleanEnv(process.env, {
   CORS_ORIGIN: str(),
   PORT: port(),
 
-  BODY_LIMIT: num(),
-  NODE_ENV: str({ choices: ["development", "production"] }),
+  BUCKET_DB_NAME: str({ default: "bucket" }),
+  BUCKET_PREFIX: str({ default: "uploads" }),
+
+  BODY_LIMIT: num({ default: 128 }),
+  NODE_ENV: str({
+    choices: ["development", "production"],
+    default: "development",
+  }),
 });
 
 export default env;

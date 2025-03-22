@@ -7,6 +7,7 @@ import app from "@/app";
 const server = Bun.serve({
   port: env.PORT,
   fetch: app.fetch,
+  maxRequestBodySize: env.BODY_LIMIT * 1024 * 1024,
 });
 
 const state = await mongodb();
