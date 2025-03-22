@@ -33,6 +33,9 @@ REDIS_URI=""
 CORS_ORIGIN=""
 PORT=""
 
+BUCKET_DB_NAME=""
+BUCKET_PREFIX=""
+
 BODY_LIMIT=""
 NODE_ENV=""
 ```
@@ -59,13 +62,14 @@ bun run start
 .
 ├── src/
 │   ├── index.ts        # Entry Point
-│   ├── server.ts       # Socket.IO Config
+│   ├── server.ts       # Server Config
 │   ├── app.ts          # Hono App Config
 │   ├── routes/         # API Routes
 │   ├── models/         # Mongoose Models
 │   ├── middleware/     # Custom Middlewares
 │   ├── utils/          # Utility Functions
 │   ├── helpers/        # Helper Functions
+│   ├── interface/      # Types & Interfaces
 │   ├── database/       # Mongoose & Redis Config
 │   ├── controllers/    # API Controllers
 │

@@ -177,5 +177,6 @@ dist
 # vercel
 .vercel
 
-# Test code dir
+# test, temp dir
 test
+temp
