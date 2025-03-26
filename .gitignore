@@ -180,3 +180,4 @@ dist
 # test, temp dir
 test
 temp
+files.ts

@@ -18,6 +18,7 @@ const env = cleanEnv(process.env, {
   REDIS_URI: url(),
   CORS_ORIGIN: str(),
   PORT: port(),
+  SOCKET_PORT: port(),
 
   BUCKET_DB_NAME: str({ default: "bucket" }),
   BUCKET_PREFIX: str({ default: "uploads" }),
