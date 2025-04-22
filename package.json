@@ -1,7 +1,8 @@
 {
   "name": "bun-hono-api",
-  "module": "src/index.ts",
+  "version": "1.0.0",
   "type": "module",
+  "module": "src/index.ts",
   "scripts": {
     "dev": "bun --watch src/index.ts",
     "start": "bun run src/index.ts",
