@@ -9,6 +9,7 @@
     "module": "ESNext",
     "moduleDetection": "force",
     "jsx": "react-jsx",
+    "jsxImportSource": "hono/jsx",
     "allowJs": true,
     /* Bundler mode */
     "moduleResolution": "bundler",
@@ -25,9 +26,12 @@
     "noPropertyAccessFromIndexSignature": false,
     "baseUrl": ".",
     "paths": {
-      "@/*": [
+      "~/*": [
         "src/*"
-      ]
+      ],
+      "~/package.json": [
+        "package.json"
+      ],
     }
   }
 }
