@@ -1,11 +1,11 @@
 import type { Context } from "hono";
 import type { Options } from "argon2";
-import type { UserInterface } from "@/interface";
+import type { UserInterface } from "~/interface";
 import { Types } from "mongoose";
 import { randomBytes } from "crypto";
 import { setCookie } from "hono/cookie";
 import { sign } from "hono/jwt";
-import env from "@/utils/env";
+import env from "~/utils/env";
 
 const generateIssuedExpired = (seconds: number) => {
   const issuedAt = Math.floor(Date.now() / 1000);

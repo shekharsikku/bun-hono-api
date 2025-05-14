@@ -1,4 +1,4 @@
-import type { MessageInterface } from "@/interface";
+import type { MessageInterface } from "~/interface";
 import { Schema, model } from "mongoose";
 
 const MessageSchema = new Schema<MessageInterface>(

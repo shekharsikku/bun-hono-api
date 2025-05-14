@@ -1,5 +1,5 @@
 import { Hono } from "hono";
-import { authAccess } from "@/middlewares";
+import { authAccess } from "~/middlewares";
 import {
   sendRequest,
   handleRequest,
@@ -7,7 +7,7 @@ import {
   pendingRequests,
   unfriendUser,
   fetchFriends,
-} from "@/controllers/friend";
+} from "~/controllers/friend";
 
 const friend = new Hono();
 

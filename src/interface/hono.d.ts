@@ -1,4 +1,4 @@
-import type { UserInterface, TokenInterface } from "@/interface";
+import type { UserInterface, TokenInterface } from "~/interface";
 
 declare module "hono" {
   interface ContextVariableMap {

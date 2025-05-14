@@ -1,13 +1,13 @@
 import { Hono } from "hono";
-import { authAccess } from "../middlewares";
-import { validateSchema, messageSchema } from "@/utils/schema";
+import { authAccess } from "~/middlewares";
+import { validateSchema, messageSchema } from "~/utils/schema";
 import {
   deleteMessages,
   deleteMessage,
   editMessage,
   getMessages,
   sendMessage,
-} from "@/controllers/message";
+} from "~/controllers/message";
 
 const message = new Hono();
 

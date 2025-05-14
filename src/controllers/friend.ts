@@ -1,8 +1,8 @@
 import type { Context } from "hono";
 import { Types } from "mongoose";
-import { ApiError, ApiResponse } from "@/utils";
-import Friend from "@/models/friend";
-import User from "@/models/user";
+import { ApiError, ApiResponse } from "~/utils";
+import Friend from "~/models/friend";
+import User from "~/models/user";
 
 const sendRequest = async (ctx: Context) => {
   try {

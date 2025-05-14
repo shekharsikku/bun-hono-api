@@ -1,5 +1,5 @@
 import ImageKit from "imagekit";
-import env from "@/utils/env";
+import env from "~/utils/env";
 
 const imagekit = new ImageKit({
   publicKey: env.IMAGEKIT_PUBLIC_KEY,

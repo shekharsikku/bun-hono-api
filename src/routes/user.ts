@@ -1,6 +1,6 @@
 import { Hono } from "hono";
-import { authAccess } from "@/middlewares";
-import { validateSchema, profileSchema, passwordSchema } from "@/utils/schema";
+import { authAccess } from "~/middlewares";
+import { validateSchema, profileSchema, passwordSchema } from "~/utils/schema";
 import {
   profileSetup,
   changePassword,
@@ -9,7 +9,7 @@ import {
   deleteImage,
   searchUsers,
   fetchContacts,
-} from "@/controllers/user";
+} from "~/controllers/user";
 
 const user = new Hono();
 

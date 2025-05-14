@@ -1,17 +1,17 @@
 import type { Context } from "hono";
 import { deleteCookie } from "hono/cookie";
 import { hash, verify } from "argon2";
-import { ApiError, ApiResponse } from "@/utils";
-import { setData, delData } from "@/utils/redis";
+import { ApiError, ApiResponse } from "~/utils";
+import { setData, delData } from "~/utils/redis";
 import {
   authorizeCookie,
   createUserInfo,
   generateAccess,
   generateRefresh,
   argonOptions,
-} from "@/helpers";
-import User from "@/models/user";
-import env from "@/utils/env";
+} from "~/helpers";
+import User from "~/models/user";
+import env from "~/utils/env";
 
 const signUpUser = async (ctx: Context) => {
   try {

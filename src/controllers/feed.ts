@@ -1,6 +1,6 @@
 import type { Context } from "hono";
-import { ApiError, ApiResponse } from "../utils";
-import Feed from "../models/feed";
+import { ApiError, ApiResponse } from "~/utils";
+import Feed from "~/models/feed";
 
 const newFeed = async (c: Context) => {
   try {

@@ -1,10 +1,10 @@
-import { Hono } from "hono";
-import authRoutes from "@/routes/auth";
-import userRoutes from "@/routes/user";
-import feedRoutes from "@/routes/feed";
-import friendRoutes from "@/routes/friend";
-import messageRoutes from "@/routes/message";
-import filesRoutes from "@/routes/files";
+import { Hono, type Context } from "hono";
+import authRoutes from "~/routes/auth";
+import userRoutes from "~/routes/user";
+import feedRoutes from "~/routes/feed";
+import friendRoutes from "~/routes/friend";
+import messageRoutes from "~/routes/message";
+import filesRoutes from "~/routes/files";
 
 const routes = new Hono();
 

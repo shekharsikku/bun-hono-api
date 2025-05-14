@@ -1,17 +1,17 @@
 import type { Context } from "hono";
 import { Types } from "mongoose";
 import { hash, verify } from "argon2";
-import { ApiError, ApiResponse } from "@/utils";
-import { imagekitUpload, imagekitDelete } from "@/utils/imagekit";
-import { setData } from "@/utils/redis";
+import { ApiError, ApiResponse } from "~/utils";
+import { imagekitUpload, imagekitDelete } from "~/utils/imagekit";
+import { setData } from "~/utils/redis";
 import {
   generateAccess,
   hasEmptyField,
   createUserInfo,
   argonOptions,
-} from "@/helpers";
-import User from "@/models/user";
-import Conversation from "@/models/conversation";
+} from "~/helpers";
+import User from "~/models/user";
+import Conversation from "~/models/conversation";
 
 const profileSetup = async (ctx: Context) => {
   try {

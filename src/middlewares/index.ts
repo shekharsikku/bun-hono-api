@@ -1,7 +1,7 @@
 import type { MiddlewareHandler, Context, Next } from "hono";
 import type { Types } from "mongoose";
-import { ApiError, ApiResponse } from "@/utils";
-import { setData, getData } from "@/utils/redis";
+import { ApiError, ApiResponse } from "~/utils";
+import { setData, getData } from "~/utils/redis";
 import { getCookie, deleteCookie } from "hono/cookie";
 import { verify, decode } from "hono/jwt";
 import {
@@ -9,10 +9,10 @@ import {
   generateRefresh,
   createUserInfo,
   authorizeCookie,
-} from "@/helpers";
-import { redis } from "@/database";
-import User from "@/models/user";
-import env from "@/utils/env";
+} from "~/helpers";
+import { redis } from "~/database";
+import User from "~/models/user";
+import env from "~/utils/env";
 
 const authAccess: MiddlewareHandler = async (
   ctx: Context,

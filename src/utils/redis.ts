@@ -1,7 +1,7 @@
-import type { UserInterface } from "@/interface";
+import type { UserInterface } from "~/interface";
 import { Types } from "mongoose";
-import { redis } from "@/database";
-import env from "@/utils/env";
+import { redis } from "~/database";
+import env from "~/utils/env";
 
 const setData = async (data: UserInterface) => {
   try {

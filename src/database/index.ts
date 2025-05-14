@@ -1,7 +1,7 @@
 import { MongoClient, GridFSBucket, ServerApiVersion } from "mongodb";
 import { connect, ConnectionStates } from "mongoose";
 import { Redis } from "ioredis";
-import env from "@/utils/env";
+import env from "~/utils/env";
 
 declare const globalThis: {
   redis: Redis | undefined;

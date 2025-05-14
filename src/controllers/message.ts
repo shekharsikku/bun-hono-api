@@ -1,7 +1,7 @@
 import type { Context } from "hono";
-import { ApiError, ApiResponse } from "@/utils";
-import Conversation from "@/models/conversation";
-import Message from "@/models/message";
+import { ApiError, ApiResponse } from "~/utils";
+import Conversation from "~/models/conversation";
+import Message from "~/models/message";
 
 const sendMessage = async (ctx: Context) => {
   try {

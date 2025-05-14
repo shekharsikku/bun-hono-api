@@ -1,5 +1,5 @@
 import { Types, Schema, model } from "mongoose";
-import type { UserInterface } from "@/interface";
+import type { UserInterface } from "~/interface";
 
 const UserSchema = new Schema<UserInterface>(
   {

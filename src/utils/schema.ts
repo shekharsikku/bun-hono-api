@@ -1,6 +1,6 @@
 import type { Context, Next } from "hono";
 import { z, ZodSchema, ZodError } from "zod";
-import { ApiResponse } from "@/utils";
+import { ApiResponse } from "~/utils";
 
 const ValidationError = (
   error: ZodError

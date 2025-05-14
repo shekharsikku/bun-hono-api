@@ -1,4 +1,4 @@
-import type { FriendInterface } from "@/interface";
+import type { FriendInterface } from "~/interface";
 import { Schema, model } from "mongoose";
 
 const FriendSchema = new Schema<FriendInterface>(
