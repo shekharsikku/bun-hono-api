@@ -9,7 +9,7 @@ import {
   generateAccess,
   generateRefresh,
   argonOptions,
-} from "~/helpers";
+} from "~/utils/helpers";
 import User from "~/models/user";
 import env from "~/utils/env";
 

@@ -9,7 +9,7 @@ import {
   generateRefresh,
   createUserInfo,
   authorizeCookie,
-} from "~/helpers";
+} from "~/utils/helpers";
 import { redis } from "~/database";
 import User from "~/models/user";
 import env from "~/utils/env";

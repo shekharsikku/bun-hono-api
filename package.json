@@ -1,5 +1,5 @@
 {
-  "name": "bun-hono-api",
+  "name": "synchronous-hono",
   "version": "1.0.0",
   "type": "module",
   "module": "src/index.ts",
@@ -13,6 +13,7 @@
     "typescript": "^5.8.3"
   },
   "dependencies": {
+    "@hono/node-server": "^1.14.1",
     "argon2": "^0.43.0",
     "envalid": "^8.0.0",
     "hono": "^4.7.9",

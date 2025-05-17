@@ -9,7 +9,7 @@ import {
   hasEmptyField,
   createUserInfo,
   argonOptions,
-} from "~/helpers";
+} from "~/utils/helpers";
 import User from "~/models/user";
 import Conversation from "~/models/conversation";
 

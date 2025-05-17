@@ -33,7 +33,7 @@ app.get("/hello", (ctx: Context) => {
   return ctx.json({ message }, 200);
 });
 
-// app.route("/api", routes);
+app.route("/api", routes);
 
 app.onError((err: Error, ctx: Context) => {
   const message = err.message || "Oops! Something went wrong!";
