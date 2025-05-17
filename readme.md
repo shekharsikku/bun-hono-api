@@ -1,4 +1,4 @@
-## **Bun & Hono Api**
+## **Synchronous Chat Api using Bun & Hono**
 
 This is a lightweight, high-performance Api built with `Bun` and `Hono`, leveraging `Mongoose` for MongoDB interactions, `ioredis` for Redis client, `argon2` for password hashing, and `Zod` for validation.
 
@@ -32,6 +32,7 @@ MONGODB_URI=""
 REDIS_URI=""
 CORS_ORIGIN=""
 PORT=""
+SOCKET_PORT=""
 
 BUCKET_DB_NAME=""
 BUCKET_PREFIX=""
@@ -62,13 +63,12 @@ bun run start
 .
 ├── src/
 │   ├── index.ts        # Entry Point
-│   ├── server.ts       # Server Config
+│   ├── server.ts       # Socket Server Config
 │   ├── app.ts          # Hono App Config
 │   ├── routes/         # API Routes
 │   ├── models/         # Mongoose Models
 │   ├── middleware/     # Custom Middlewares
 │   ├── utils/          # Utility Functions
-│   ├── helpers/        # Helper Functions
 │   ├── interface/      # Types & Interfaces
 │   ├── database/       # Mongoose & Redis Config
 │   ├── controllers/    # API Controllers
@@ -78,6 +78,6 @@ bun run start
 └── readme.md           # Documentation
 ```
 
-This project was created using `bun init` in bun v1.2.1. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+This project was created using `bun init` in bun v1.2.10. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
 
 ---
