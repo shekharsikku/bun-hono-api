@@ -73,17 +73,15 @@ const updateImage = async (ctx: Context) => {
 
     if (userProfile) {
       if (userProfile.image && userProfile.image !== "") {
-        const imageData = JSON.parse(userProfile.image!);
-        await imagekitDelete(imageData.fid);
+        const imageUrl = new URL(userProfile.image);
+        const fileId = imageUrl.searchParams.get("fid");
+        fileId && (await imagekitDelete(fileId));
       }
 
       const uploadedImage = await imagekitUpload(imageFile);
 
       if (uploadedImage && uploadedImage.url) {
-        userProfile.image = JSON.stringify({
-          fid: uploadedImage.fileId,
-          url: uploadedImage.url,
-        });
+        userProfile.image = `${uploadedImage.url}?fid=${uploadedImage.fileId}`;
         await userProfile.save({ validateBeforeSave: true });
 
         const userInfo = createUserInfo(userProfile);
